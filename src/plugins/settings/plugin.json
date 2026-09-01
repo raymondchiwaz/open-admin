@@ -1,0 +1,12 @@
+{
+  "id": "core-settings",
+  "name": "Settings",
+  "version": "1.0.0",
+  "description": "Site name and theme preferences for the admin.",
+  "author": "Open Admin contributors",
+  "icon": "⚙️",
+  "pages": [{ "path": "settings", "title": "Settings", "icon": "⚙️", "order": 900 }],
+  "widgets": [],
+  "provides": [],
+  "requires": []
+}

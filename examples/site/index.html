@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northwind Goods — a normal website (with Open Admin bolted on)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1c2030; background: #fbfaf7; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 18px 6vw; background: #fff; border-bottom: 1px solid #eee; position: sticky; top: 0; }
+  .logo { font-weight: 800; font-size: 19px; letter-spacing: -0.3px; }
+  .logo span { color: #6d5cff; }
+  nav a { color: #1c2030; text-decoration: none; margin-left: 22px; font-weight: 500; font-size: 14.5px; }
+  .admin-btn { background: linear-gradient(135deg, #6d5cff, #b45cff); color: #fff !important; padding: 9px 16px; border-radius: 10px; }
+  .hero { padding: 72px 6vw 56px; max-width: 860px; }
+  .hero h1 { font-size: 42px; letter-spacing: -1px; margin: 0 0 14px; }
+  .hero p { color: #5b6172; font-size: 18px; line-height: 1.6; margin: 0 0 26px; }
+  .hero .note { font-size: 13.5px; color: #8b93a7; max-width: 640px; background: #fff; border: 1px dashed #ddd; border-radius: 12px; padding: 12px 16px; }
+  .products { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; padding: 0 6vw 70px; }
+  .product { background: #fff; border: 1px solid #eee; border-radius: 16px; padding: 20px; }
+  .product .em { font-size: 38px; }
+  .product h3 { margin: 10px 0 4px; font-size: 16px; }
+  .product p { margin: 0; color: #8b93a7; font-size: 13.5px; }
+  .demo-actions { padding: 0 6vw 60px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .demo-btn { border: 1px solid #e4e7ef; background: #fff; border-radius: 10px; padding: 11px 16px; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .demo-btn:hover { border-color: #6d5cff; color: #6d5cff; }
+  footer { padding: 26px 6vw; border-top: 1px solid #eee; color: #8b93a7; font-size: 13px; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo">Northwind<span>Goods</span> 🧣</div>
+    <nav>
+      <a href="#shop">Shop</a><a href="#about">About</a>
+      <a class="admin-btn" href="/admin/">Open Admin →</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>A completely ordinary website.</h1>
+    <p>Northwind Goods sells cozy things. There is nothing special about this page — <b>and that's the point</b>.</p>
+    <div class="note">
+      ⚡ <b>Open Admin is mounted at <code>/admin</code></b> as a plugin of this site (one line of middleware).
+      The 💬 Feedback button (bottom-right) is Open Admin's drop-in widget: visitors send feedback and it appears —
+      live, social-network style — in the <a href="/admin/">admin's Social feed</a>. Try the buttons below, then watch the feed.
+    </div>
+  </section>
+
+  <div class="demo-actions">
+    <button class="demo-btn" id="deploy-btn">🚀 Simulate a deploy</button>
+    <button class="demo-btn" id="visit-btn">👥 Simulate visitor activity</button>
+    <button class="demo-btn" id="err-btn">🐞 Simulate an error spike</button>
+  </div>
+
+  <section class="products" id="shop">
+    <div class="product"><div class="em">🧦</div><h3>Cloud Socks</h3><p>$12 — suspiciously soft.</p></div>
+    <div class="product"><div class="em">🧣</div><h3>Fjord Scarf</h3><p>$38 — windswept approved.</p></div>
+    <div class="product"><div class="em">☕</div><h3>Nordic Mug</h3><p>$18 — holds 400ml of calm.</p></div>
+    <div class="product"><div class="em">🕯️</div><h3>Pine Candle</h3><p>$24 — smells like a forest.</p></div>
+  </section>
+
+  <footer>© 2026 Northwind Goods. This demo site exists to prove Open Admin can be added to <i>your</i> site as a plugin.</footer>
+
+  <!-- ⬇️ Open Admin's drop-in feedback widget: the only integration a site needs -->
+  <script src="/admin/social-admin-feedback.js" defer></script>
+  <script>
+    function emit(text, icon, level) {
+      fetch('/admin/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'activity', payload: { activity: { text, icon, level, source: 'northwind-site' } } }),
+      });
+    }
+    deploy.addEventListener('click', () => emit('Deploy **#483** to production started — building from `main`', '🚀', 'info'));
+    visit.addEventListener('click', () => emit('**' + (40 + Math.floor(Math.random() * 60)) + ' visitors** browsing the shop right now', '👥', 'info'));
+    err.addEventListener('click', () => emit('Checkout error rate spiked to **4.1%** (payment gateway timeout)', '🔴', 'error'));
+  </script>
+</body>
+</html>

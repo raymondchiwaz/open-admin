@@ -1,0 +1,12 @@
+{
+  "id": "core-plugins",
+  "name": "Plugin Manager",
+  "version": "1.0.1",
+  "description": "Enable, disable and inspect every plugin — including this one.",
+  "author": "Open Admin contributors",
+  "icon": "🧩",
+  "pages": [{ "path": "plugins", "title": "Plugins", "icon": "🧩", "order": 800 }],
+  "widgets": [],
+  "provides": [],
+  "requires": []
+}

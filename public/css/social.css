@@ -1,0 +1,140 @@
+/* Social Admin — feed, stories, reactions, feedback board, right rail. */
+
+.oa-social { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 22px; }
+.oa-social-col { min-width: 0; }
+
+/* ── Stories strip ──────────────────────────────────────────────────────── */
+.oa-stories { display: flex; gap: 18px; overflow-x: auto; padding: 4px 2px 14px; scrollbar-width: none; }
+.oa-stories::-webkit-scrollbar { display: none; }
+.oa-story { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 76px; }
+.oa-story-ring {
+  width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--panel);
+}
+.oa-story-ring .inner {
+  width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font-size: 24px;
+  background: var(--panel); border: 1px solid var(--border);
+}
+.oa-story-ring.r-ok   { background: conic-gradient(var(--ok), color-mix(in srgb, var(--ok) 30%, transparent)); }
+.oa-story-ring.r-info { background: conic-gradient(var(--accent), var(--accent-2)); }
+.oa-story-ring.r-warn { background: conic-gradient(var(--warn), color-mix(in srgb, var(--warn) 25%, transparent)); }
+.oa-story-ring.r-error{ background: conic-gradient(var(--danger), color-mix(in srgb, var(--danger) 25%, transparent)); }
+.oa-story small { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+.oa-story b { font-size: 12.5px; }
+
+/* ── Tabs ───────────────────────────────────────────────────────────────── */
+.oa-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 6px 0 16px; }
+.oa-tab {
+  border: none; background: none; color: var(--muted); font-weight: 600; font-size: 14px;
+  padding: 9px 14px; border-bottom: 2.5px solid transparent; border-radius: 8px 8px 0 0;
+}
+.oa-tab:hover { color: var(--text); background: var(--panel-2); }
+.oa-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.oa-tab .count {
+  background: var(--accent-soft); color: var(--accent); border-radius: 999px;
+  font-size: 11px; padding: 1px 7px; margin-left: 5px;
+}
+
+/* ── Composer ───────────────────────────────────────────────────────────── */
+.oa-composer { display: flex; gap: 12px; padding: 16px; margin-bottom: 16px; }
+.oa-composer-body { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.oa-composer textarea {
+  border: none; background: transparent; color: var(--text); font: inherit; resize: none; min-height: 44px;
+  padding: 8px 2px; outline: none; border-bottom: 1px dashed var(--border);
+}
+.oa-composer-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.oa-kind-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.oa-kind-chip {
+  border: 1px solid var(--border); background: var(--panel-2); color: var(--muted);
+  border-radius: 999px; padding: 5px 12px; font-size: 12.5px; font-weight: 600;
+}
+.oa-kind-chip.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+
+/* ── Post cards ─────────────────────────────────────────────────────────── */
+.oa-feed { display: flex; flex-direction: column; gap: 14px; }
+.oa-post { padding: 16px 18px; animation: pop-in 0.25s ease; }
+@keyframes pop-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.oa-post-head { display: flex; align-items: center; gap: 11px; }
+.oa-post-who { flex: 1; min-width: 0; }
+.oa-post-who .name { font-weight: 700; display: flex; align-items: center; gap: 5px; }
+.oa-post-who .verified { color: var(--accent); font-size: 13px; }
+.oa-post-who .handle { color: var(--muted); font-size: 13px; font-weight: 400; }
+.oa-post-time { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+.oa-post-text { margin: 10px 2px 4px; font-size: 15px; overflow-wrap: anywhere; }
+.oa-post-text .oa-tag { color: var(--accent); font-weight: 600; }
+.oa-post-meta { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 2px; }
+.oa-post-actions { display: flex; align-items: center; gap: 6px; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; flex-wrap: wrap; }
+.oa-react {
+  border: 1px solid var(--border); background: var(--panel-2); border-radius: 999px;
+  padding: 4px 11px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;
+  transition: transform 0.12s;
+}
+.oa-react b { font-weight: 600; }
+.oa-react:hover { transform: scale(1.06); }
+.oa-react.mine { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.oa-act {
+  border: none; background: none; color: var(--muted); font-size: 13px; font-weight: 600;
+  padding: 5px 9px; border-radius: 8px;
+}
+.oa-act:hover { background: var(--panel-2); color: var(--text); }
+.oa-act.resolved { color: var(--ok); }
+.oa-comments { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; border-top: 1px dashed var(--border); padding-top: 10px; }
+.oa-comment { display: flex; gap: 9px; align-items: flex-start; font-size: 14px; }
+.oa-comment .bubble { background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px 14px 14px 14px; padding: 7px 11px; flex: 1; }
+.oa-comment .bubble small { color: var(--muted); }
+.oa-comment-form { display: flex; gap: 8px; }
+.oa-add-react { position: relative; }
+.oa-add-react .menu {
+  position: absolute; bottom: 110%; left: 0; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: var(--shadow); padding: 6px; display: flex; gap: 2px; z-index: 5;
+}
+.oa-add-react .menu button { border: none; background: none; font-size: 19px; padding: 4px 7px; border-radius: 8px; }
+.oa-add-react .menu button:hover { background: var(--panel-2); }
+
+/* ── Feedback board ─────────────────────────────────────────────────────── */
+.oa-fb-list { display: flex; flex-direction: column; gap: 12px; }
+.oa-fb-item { display: flex; gap: 14px; padding: 15px 16px; }
+.oa-fb-vote {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--panel-2);
+  min-width: 52px; padding: 7px 6px; color: var(--text);
+}
+.oa-fb-vote:hover { border-color: var(--accent); color: var(--accent); }
+.oa-fb-vote.mine { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.oa-fb-vote b { font-size: 15px; }
+.oa-fb-vote small { font-size: 10.5px; }
+.oa-fb-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.oa-fb-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.oa-fb-msg { margin: 0; }
+.oa-fb-status-btns { display: flex; gap: 5px; }
+.oa-fb-status-btns button {
+  border: 1px solid var(--border); background: var(--panel-2); color: var(--muted);
+  font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 3px 10px; text-transform: capitalize;
+}
+.oa-fb-status-btns button.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.oa-fb-comments { border-top: 1px dashed var(--border); padding-top: 8px; display: flex; flex-direction: column; gap: 7px; }
+
+/* ── Updates tab ────────────────────────────────────────────────────────── */
+.oa-update-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; }
+.oa-update-item .up-ic { font-size: 24px; }
+.oa-update-item .up-main { flex: 1; }
+.oa-update-item .up-main small { color: var(--muted); }
+
+/* ── Right rail ─────────────────────────────────────────────────────────── */
+.oa-rail { display: flex; flex-direction: column; gap: 16px; }
+.oa-rail h3 { font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+.oa-rail-card { padding: 16px; }
+.oa-trend-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border); }
+.oa-trend-row:last-child { border-bottom: none; }
+.oa-trend-row .t-tag { color: var(--accent); font-weight: 600; cursor: pointer; }
+.oa-trend-row .t-count { color: var(--muted); font-size: 12.5px; }
+.oa-suggest { display: flex; gap: 11px; padding: 11px 0; border-bottom: 1px dashed var(--border); align-items: center; }
+.oa-suggest:last-child { border-bottom: none; padding-bottom: 0; }
+.oa-suggest .s-main { flex: 1; min-width: 0; }
+.oa-suggest .s-main strong { font-size: 14px; }
+.oa-suggest .s-main p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
+.oa-caught-up { text-align: center; color: var(--muted); font-size: 13px; padding: 18px 0 8px; }
+
+@media (max-width: 1000px) {
+  .oa-social { grid-template-columns: 1fr; }
+  .oa-rail { order: 2; }
+}

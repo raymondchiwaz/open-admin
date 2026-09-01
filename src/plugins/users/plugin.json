@@ -1,0 +1,12 @@
+{
+  "id": "core-users",
+  "name": "Users",
+  "version": "2.0.4",
+  "description": "Team management: invite members, change roles, suspend accounts.",
+  "author": "Open Admin contributors",
+  "icon": "👥",
+  "pages": [{ "path": "users", "title": "Users", "icon": "👥", "order": -80 }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "users-count", "order": 10 }],
+  "provides": ["users.list"],
+  "requires": []
+}

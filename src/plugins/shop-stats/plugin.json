@@ -1,0 +1,13 @@
+{
+  "id": "shop-stats",
+  "name": "Shop Stats",
+  "version": "0.2.0",
+  "description": "Third-party example plugin: revenue widgets plus live shop activity posted to the Social feed.",
+  "author": "Acme Inc (example)",
+  "icon": "🛍️",
+  "defaultDisabled": true,
+  "pages": [{ "path": "shop-stats", "title": "Shop Stats", "icon": "🛍️", "order": 10 }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "shop-revenue", "order": 40 }],
+  "provides": ["shop.metrics"],
+  "requires": []
+}

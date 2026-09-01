@@ -1,0 +1,11 @@
+{
+  "id": "dependent-plugin",
+  "name": "Dependent Plugin",
+  "version": "0.1.0",
+  "description": "Test fixture: requires core-dashboard.",
+  "icon": "🔗",
+  "defaultDisabled": true,
+  "pages": [{ "path": "dep", "title": "Dep", "icon": "🔗", "order": 5 }],
+  "widgets": [],
+  "requires": ["core-dashboard"]
+}

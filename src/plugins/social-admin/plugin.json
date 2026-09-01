@@ -1,0 +1,12 @@
+{
+  "id": "social-admin",
+  "name": "Social Admin",
+  "version": "1.2.0",
+  "description": "Turns the dashboard into a social feed: live update statuses, deploys, visitor feedback, reactions and comments.",
+  "author": "Open Admin contributors",
+  "icon": "💬",
+  "pages": [{ "path": "social", "title": "Social Admin", "icon": "💬", "order": -100, "home": true }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "social-summary", "order": 30 }],
+  "provides": ["social.post", "feedback.capture"],
+  "requires": []
+}

@@ -1,0 +1,4 @@
+node_modules/
+.open-admin-data/
+*.log
+.DS_Store
