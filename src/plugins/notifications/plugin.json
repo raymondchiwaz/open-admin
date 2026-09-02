@@ -1,0 +1,13 @@
+{
+  "id": "notifications",
+  "name": "Notifications",
+  "version": "1.0.0",
+  "description": "A bell in the topbar plus an inbox page: collects activity, feedback, social posts, plugin changes and updates into one live, unread-counted notification center.",
+  "author": "Open Admin contributors",
+  "icon": "🔔",
+  "category": "General",
+  "pages": [{ "path": "notifications", "title": "Notifications", "icon": "🔔", "order": 140 }],
+  "widgets": [],
+  "provides": [],
+  "requires": []
+}

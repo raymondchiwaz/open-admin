@@ -95,6 +95,8 @@ class Store {
     return this._collections.get(name);
   }
 
+  collectionNames() { return [...this._collections.keys()]; }
+
   // Simple key/value store (settings, plugin state).
   _loadKv() {
     if (this._kv) return this._kv;
@@ -110,6 +112,9 @@ class Store {
     const kv = this._loadKv();
     return key in kv ? kv[key] : fallback;
   }
+
+  /** Snapshot of the whole kv store (admin-privileged introspection). */
+  kvAll() { return { ...this._loadKv() }; }
 
   kvSet(key, value) {
     const kv = this._loadKv();

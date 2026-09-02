@@ -28,7 +28,7 @@ module.exports = {
     // Live shop activity → shows up in the Social Admin feed.
     const visitors = () => 30 + Math.floor(Math.random() * 50);
     ctx.store.setState('visitorsNow', visitors());
-    ctx.every(45000, () => {
+    ctx.every(180000, () => {
       const n = visitors();
       ctx.store.setState('visitorsNow', n);
       const r = Math.random();

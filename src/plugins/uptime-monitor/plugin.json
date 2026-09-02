@@ -4,10 +4,20 @@
   "version": "0.9.1",
   "description": "Pings your services every 30s and posts the results as status updates to the Social feed.",
   "author": "Open Admin contributors",
-  "icon": "🩺",
+  "icon": "\ud83e\ude7a",
   "defaultDisabled": true,
-  "pages": [{ "path": "uptime", "title": "Uptime", "icon": "🩺", "order": 20 }],
+  "pages": [
+    {
+      "path": "uptime",
+      "title": "Uptime",
+      "icon": "\ud83e\ude7a",
+      "order": 20
+    }
+  ],
   "widgets": [],
-  "provides": ["uptime.ping"],
-  "requires": []
+  "provides": [
+    "uptime.ping"
+  ],
+  "requires": [],
+  "category": "System"
 }

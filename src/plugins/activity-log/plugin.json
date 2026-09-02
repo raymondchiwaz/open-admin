@@ -1,0 +1,14 @@
+{
+  "id": "activity-log",
+  "name": "Activity Log",
+  "version": "1.0.0",
+  "description": "Records every kernel + plugin event (type, payload, timestamp) into a capped ring buffer with a filterable, live-updating view.",
+  "author": "Open Admin contributors",
+  "icon": "📜",
+  "category": "System",
+  "defaultDisabled": false,
+  "pages": [{ "path": "activity-log", "title": "Activity Log", "icon": "📜", "order": 400 }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "activity-log-recent", "order": 40 }],
+  "provides": ["activity-log.recent"],
+  "requires": []
+}

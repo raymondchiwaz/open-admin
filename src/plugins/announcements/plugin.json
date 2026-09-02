@@ -1,0 +1,13 @@
+{
+  "id": "announcements",
+  "name": "Announcements",
+  "version": "1.0.0",
+  "description": "Broadcast a live banner across the admin: compose, publish, clear, and keep a history of every announcement.",
+  "author": "Open Admin contributors",
+  "icon": "📣",
+  "category": "General",
+  "defaultDisabled": false,
+  "pages": [{ "path": "announcements", "title": "Announcements", "icon": "📣", "order": 150 }],
+  "provides": [],
+  "requires": []
+}

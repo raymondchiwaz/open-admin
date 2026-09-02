@@ -1,0 +1,12 @@
+{
+  "id": "data-inspector",
+  "name": "Data Inspector",
+  "version": "1.0.0",
+  "description": "Read-only explorers for the JSON store — collections, docs and namespaced KV with secret masking and full-text search.",
+  "author": "Open Admin contributors",
+  "icon": "🗄️",
+  "category": "Tools",
+  "defaultDisabled": true,
+  "pages": [{ "path": "data-inspector", "title": "Data Inspector", "icon": "🗄️", "order": 550 }],
+  "requires": []
+}

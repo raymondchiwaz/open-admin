@@ -1,0 +1,14 @@
+{
+  "id": "status-page",
+  "name": "Status Page",
+  "version": "1.0.0",
+  "description": "A public status page at /status-page (self-contained HTML, auto-refresh) plus a machine-readable /api/status feed — fed by Health Checks and Incidents.",
+  "author": "Open Admin contributors",
+  "icon": "🌍",
+  "category": "System",
+  "defaultDisabled": true,
+  "pages": [{ "path": "status-page", "title": "Status Page", "icon": "🌍", "order": 430 }],
+  "widgets": [],
+  "provides": ["status-page.public"],
+  "requires": []
+}

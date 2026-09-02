@@ -1,0 +1,13 @@
+{
+  "id": "command-palette",
+  "name": "Command Palette",
+  "version": "1.0.0",
+  "description": "Keyboard-first launcher for the whole admin: Ctrl/Cmd+K (or the ⌘K pill) opens a fuzzy-searchable palette of every page plus quick actions like toggling the theme.",
+  "author": "Open Admin contributors",
+  "icon": "⌘",
+  "category": "Tools",
+  "pages": [],
+  "widgets": [],
+  "provides": [],
+  "requires": []
+}

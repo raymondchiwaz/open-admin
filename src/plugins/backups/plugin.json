@@ -1,0 +1,14 @@
+{
+  "id": "backups",
+  "name": "Backups",
+  "version": "1.0.0",
+  "description": "One-click snapshots of the plugin data directory with an optional 6-hourly auto-backup.",
+  "author": "Open Admin contributors",
+  "icon": "💾",
+  "category": "Tools",
+  "defaultDisabled": true,
+  "pages": [{ "path": "backups", "title": "Backups", "icon": "💾", "order": 510 }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "backups-last", "order": 34 }],
+  "provides": ["backups.create"],
+  "requires": []
+}

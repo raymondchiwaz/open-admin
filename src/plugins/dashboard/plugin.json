@@ -2,11 +2,25 @@
   "id": "core-dashboard",
   "name": "Dashboard",
   "version": "1.0.0",
-  "description": "The overview grid. Itself a plugin — disable it and the admin keeps working.",
+  "description": "The overview grid. Itself a plugin \u2014 disable it and the admin keeps working.",
   "author": "Open Admin contributors",
-  "icon": "🏠",
-  "pages": [{ "path": "dashboard", "title": "Dashboard", "icon": "🏠", "order": -90 }],
-  "widgets": [{ "slot": "dashboard.grid", "id": "dash-activity", "order": 20 }],
+  "icon": "\ud83c\udfe0",
+  "pages": [
+    {
+      "path": "dashboard",
+      "title": "Dashboard",
+      "icon": "\ud83c\udfe0",
+      "order": -90
+    }
+  ],
+  "widgets": [
+    {
+      "slot": "dashboard.grid",
+      "id": "dash-activity",
+      "order": 20
+    }
+  ],
   "provides": [],
-  "requires": []
+  "requires": [],
+  "category": "General"
 }

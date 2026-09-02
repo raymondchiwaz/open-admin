@@ -19,6 +19,11 @@ for (const id of OA.data.clients || []) {
     const def = mod.default;
     if (typeof def === 'function') def(OA);
     else if (def && typeof def.register === 'function') def.register(OA);
+    else if (def && (def.pages || def.widgets)) {
+      // declarative form: { pages: { path: { mount } }, widgets: { id: { mount } } }
+      for (const [path, page] of Object.entries(def.pages || {})) OA.registerPage(path, page);
+      for (const [wid, widget] of Object.entries(def.widgets || {})) OA.registerWidget(wid, widget);
+    }
   } catch (err) {
     console.error('[open-admin] client module failed:', id, err);
     OA.toast(`⚠️ Plugin <b>${OA.esc(id)}</b> failed to load in the browser`, 'error');
@@ -27,20 +32,34 @@ for (const id of OA.data.clients || []) {
 
 /* ── Sidebar ───────────────────────────────────────────────────────────── */
 
+const NAV_ORDER = ['General', 'Content', 'Insights', 'System', 'Tools'];
+
 function renderSidebar() {
   const nav = OA.data.nav;
+  const groups = new Map();
+  for (const item of nav) {
+    const cat = item.category || 'General';
+    if (!groups.has(cat)) groups.set(cat, []);
+    groups.get(cat).push(item);
+  }
+  const cats = [...groups.keys()].sort((a, b) =>
+    ((NAV_ORDER.indexOf(a) + 1 || 99) - (NAV_ORDER.indexOf(b) + 1 || 99)) ||
+    a.localeCompare(b));
+  const showLabels = cats.length > 1;
+  const navHtml = cats.map((cat) => `
+    ${showLabels ? `<div class="oa-nav-label">${OA.esc(cat)}</div>` : ''}
+    ${groups.get(cat).map((item) => `
+      <a class="oa-nav-item" data-path="${OA.esc(item.path)}" href="#/${OA.esc(item.path)}">
+        <span class="oa-nav-icon">${item.icon || '📄'}</span>
+        <span>${OA.esc(item.title)}</span>
+      </a>`).join('')}`).join('');
+
   document.getElementById('sidebar').innerHTML = `
     <div class="oa-brand">
       <span class="oa-brand-logo">💬</span>
       <span class="oa-brand-text"><strong>${OA.esc(OA.siteName)}</strong><small>Open Admin</small></span>
     </div>
-    <nav class="oa-nav">
-      ${nav.map((item) => `
-        <a class="oa-nav-item" data-path="${OA.esc(item.path)}" href="#/${OA.esc(item.path)}">
-          <span class="oa-nav-icon">${item.icon || '📄'}</span>
-          <span>${OA.esc(item.title)}</span>
-        </a>`).join('')}
-    </nav>
+    <nav class="oa-nav">${navHtml}</nav>
     <div class="oa-sidebar-foot">
       <div class="oa-pill-row">
         <span class="oa-pill">${OA.data.plugins.filter((p) => p.enabled).length} plugins</span>
@@ -61,32 +80,10 @@ function renderTopbar(title, subtitle) {
     <div class="oa-topbar-title"><h1 id="page-title">${OA.esc(title || '')}</h1>
       <span class="oa-topbar-sub">${OA.esc(subtitle || '')}</span></div>
     <div class="oa-topbar-actions">
-      <button class="oa-icon-btn" id="bell-btn" title="Live activity">🔔<span class="oa-dot" hidden></span></button>
       <button class="oa-icon-btn" id="refresh-btn" title="Reload admin">⟳</button>
       <div class="oa-me" title="Signed in as ${OA.esc(OA.me.name)}">${OA.avatar(OA.me, 34)}</div>
     </div>`;
   document.getElementById('refresh-btn').addEventListener('click', () => location.reload());
-
-  const bell = document.getElementById('bell-btn');
-  const dot = bell.querySelector('.oa-dot');
-  const markLive = () => { dot.hidden = false; };
-  OA.on('activity', markLive);
-  OA.on('social.post.created', markLive);
-  OA.on('feedback.created', markLive);
-  bell.addEventListener('click', async () => {
-    dot.hidden = true;
-    const { events } = await OA.api('/api/events/recent');
-    const rows = events.slice(0, 12).map((e) => `
-      <div class="oa-bell-row"><span class="oa-bell-type">${OA.esc(e.type)}</span>
-      <span class="oa-bell-time">${OA.timeAgo(e.at)} ago</span></div>`).join('');
-    let pop = document.querySelector('.oa-bell-pop');
-    if (pop) { pop.remove(); return; }
-    pop = document.createElement('div');
-    pop.className = 'oa-bell-pop';
-    pop.innerHTML = `<h4>Live events</h4>${rows || '<p class="muted">Nothing yet.</p>'}`;
-    document.querySelector('.oa-topbar-actions').appendChild(pop);
-    setTimeout(() => document.addEventListener('click', () => pop?.remove(), { once: true }), 0);
-  });
 }
 
 /* ── Router ────────────────────────────────────────────────────────────── */

@@ -1,0 +1,14 @@
+{
+  "id": "system-info",
+  "name": "System Info",
+  "version": "1.0.0",
+  "description": "Runtime introspection: Node version, uptime, memory, CPU, data directory and per-collection storage sizes.",
+  "author": "Open Admin contributors",
+  "icon": "🖥️",
+  "category": "System",
+  "defaultDisabled": false,
+  "pages": [{ "path": "system-info", "title": "System Info", "icon": "🖥️", "order": 410 }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "system-info-card", "order": 45 }],
+  "provides": [],
+  "requires": []
+}

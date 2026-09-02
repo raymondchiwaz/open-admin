@@ -1,0 +1,14 @@
+{
+  "id": "analytics",
+  "name": "Analytics",
+  "version": "1.0.0",
+  "description": "Lightweight event tracking: a 14-day traffic chart, top events and a live counter, plus a dashboard sparkline.",
+  "author": "Open Admin contributors",
+  "icon": "📈",
+  "category": "Insights",
+  "defaultDisabled": false,
+  "pages": [{ "path": "analytics", "title": "Analytics", "icon": "📈", "order": 300 }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "analytics-overview", "order": 35 }],
+  "provides": ["analytics.track"],
+  "requires": []
+}

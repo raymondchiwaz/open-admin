@@ -114,13 +114,19 @@ class OpenAdminKernel {
     return {
       pluginId: id,
       meta,
+      /** Where the kernel persists JSON state (server-side plugins only). */
+      dataDir: kernel.options.dataDir,
       /** Global event bus — emit and subscribe (also streamed to browsers). */
       events: kernel.bus,
-      /** Persistent storage; collection names are auto-prefixed per plugin. */
+      /** Persistent storage; collection names are auto-prefixed per plugin.
+       *  collections() / kvAll() are admin-privileged introspection — only
+       *  for system tools (e.g. a data inspector), not ordinary plugins. */
       store: {
         collection: (name) => kernel.store.collection(`${id}.${name}`),
         getState: (key, fallback) => kernel.store.kvGet(`${id}.${key}`, fallback),
         setState: (key, value) => kernel.store.kvSet(`${id}.${key}`, value),
+        collections: () => kernel.store.collectionNames(),
+        kvAll: () => kernel.store.kvAll(),
       },
       /** Provide/use cross-plugin capabilities. */
       capabilities: kernel.capabilities,
@@ -294,23 +300,21 @@ class OpenAdminKernel {
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
     try {
-      // Public escape hatch: the site feedback widget must work for visitors
-      // (no auth). Everything else goes through the optional auth hook.
-      const isPublicFeedback =
-        req.method === 'POST' && pathname === '/api/social/feedback';
-      if (this.options.auth && !isPublicFeedback) {
+      // Public escape hatches: the site feedback widget and the (optional)
+      // public status page must work for visitors. Everything else goes
+      // through the optional auth hook.
+      const PUBLIC_PATHS = [
+        ['POST', '/api/social/feedback'],
+        ['GET', '/status-page'],
+        ['GET', '/api/status'],
+      ];
+      const isPublic = PUBLIC_PATHS.some(([m, p]) => req.method === m && pathname === p);
+      if (this.options.auth && !isPublic) {
         const ok = await this.options.auth(req);
         if (!ok) { json(res, 401, { error: 'unauthorized' }); return; }
       }
 
-      // 1) Admin SPA for browser navigation (with base-path injection).
-      if (req.method === 'GET' && !pathname.startsWith('/api/') && !pathname.startsWith('/oa/') &&
-          (pathname === '/' || pathname === '/admin' || !path.extname(pathname))) {
-        this._serveIndex(res);
-        return;
-      }
-
-      // 2) Plugin client assets: /oa/plugins/<id>/<file>
+      // 1) Plugin client assets: /oa/plugins/<id>/<file>
       const pluginAsset = pathname.match(/^\/oa\/plugins\/([a-z0-9-]+)\/(.+)$/);
       if (pluginAsset) {
         const dir = this.plugins.dirOf(pluginAsset[1]);
@@ -319,7 +323,7 @@ class OpenAdminKernel {
         return;
       }
 
-      // 3) Shell assets: /oa/… maps onto public/, plus root-level files like
+      // 2) Shell assets: /oa/… maps onto public/, plus root-level files like
       //    /social-admin-feedback.js (traversal-guarded inside serveStatic).
       if (req.method === 'GET' && !pathname.startsWith('/api/')) {
         const rel = pathname.startsWith('/oa/')
@@ -328,20 +332,25 @@ class OpenAdminKernel {
         if (serveStatic(PUBLIC_DIR, rel, res)) return;
       }
 
-      // 4) API: plugin routes first, then core routes.
-      if (pathname.startsWith('/api/')) {
-        const match = this._matchRoute(req.method, pathname);
-        if (match) {
-          req.searchParams = url.searchParams;
-          await match.handler(req, res, match.params, url);
-          return;
-        }
-        json(res, 404, { error: `no route for ${req.method} ${pathname}` });
+      // 3) Plugin routes — matched at ANY path (plugins may serve things like
+      //    a public /status-page). Core routes (all under /api/) are checked
+      //    after the plugin routes inside _matchRoute.
+      const match = this._matchRoute(req.method, pathname);
+      if (match) {
+        req.searchParams = url.searchParams;
+        await match.handler(req, res, match.params, url);
+        return;
+      }
+
+      // 4) Admin SPA for browser navigation (with base-path injection).
+      if (req.method === 'GET' && !pathname.startsWith('/api/') &&
+          (pathname === '/' || pathname === '/admin' || !path.extname(pathname))) {
+        this._serveIndex(res);
         return;
       }
 
       // 5) Anything else → 404.
-      json(res, 404, { error: 'not found' });
+      json(res, 404, { error: `no route for ${req.method} ${pathname}` });
     } catch (err) {
       console.error('[open-admin] request error:', err);
       if (!res.headersSent) json(res, 500, { error: err.message || 'internal error' });

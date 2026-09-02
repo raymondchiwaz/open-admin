@@ -1,0 +1,12 @@
+{
+  "id": "webhooks",
+  "name": "Webhooks",
+  "version": "1.0.0",
+  "description": "Forward internal events to any HTTPS endpoint with HMAC-SHA256 signatures, per-hook event filters and a delivery history.",
+  "author": "Open Admin contributors",
+  "icon": "🪝",
+  "category": "Tools",
+  "defaultDisabled": true,
+  "pages": [{ "path": "webhooks", "title": "Webhooks", "icon": "🪝", "order": 560 }],
+  "requires": []
+}

@@ -1,0 +1,14 @@
+{
+  "id": "health-checks",
+  "name": "Health Checks",
+  "version": "1.0.0",
+  "description": "Monitor HTTP endpoints: per-check timers, success-rate history, down/recovery alerts in the Social feed.",
+  "author": "Open Admin contributors",
+  "icon": "📡",
+  "category": "System",
+  "defaultDisabled": true,
+  "pages": [{ "path": "health-checks", "title": "Health Checks", "icon": "📡", "order": 420 }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "health-overview", "order": 30 }],
+  "provides": ["health.snapshot"],
+  "requires": []
+}

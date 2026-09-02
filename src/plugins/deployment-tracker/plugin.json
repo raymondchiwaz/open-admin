@@ -1,0 +1,14 @@
+{
+  "id": "deployment-tracker",
+  "name": "Deploys",
+  "version": "1.0.0",
+  "description": "Track deploys from the admin panel: start, finish or roll back deployments and announce every step in the Social feed.",
+  "author": "Open Admin contributors",
+  "icon": "🚢",
+  "category": "Content",
+  "defaultDisabled": true,
+  "pages": [{ "path": "deploys", "title": "Deploys", "icon": "🚢", "order": 210 }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "deploys-current", "order": 25 }],
+  "provides": ["deploys.current"],
+  "requires": []
+}

@@ -1,0 +1,14 @@
+{
+  "id": "incident-manager",
+  "name": "Incidents",
+  "version": "1.0.0",
+  "description": "Track incidents end to end: investigate, identify, monitor, resolve — with a live timeline and Social feed announcements.",
+  "author": "Open Admin contributors",
+  "icon": "🚨",
+  "category": "System",
+  "defaultDisabled": true,
+  "pages": [{ "path": "incidents", "title": "Incidents", "icon": "🚨", "order": 440 }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "incidents-active", "order": 32 }],
+  "provides": ["incidents.active"],
+  "requires": []
+}

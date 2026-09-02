@@ -4,9 +4,17 @@
   "version": "1.0.0",
   "description": "Site name and theme preferences for the admin.",
   "author": "Open Admin contributors",
-  "icon": "⚙️",
-  "pages": [{ "path": "settings", "title": "Settings", "icon": "⚙️", "order": 900 }],
+  "icon": "\u2699\ufe0f",
+  "pages": [
+    {
+      "path": "settings",
+      "title": "Settings",
+      "icon": "\u2699\ufe0f",
+      "order": 900
+    }
+  ],
   "widgets": [],
   "provides": [],
-  "requires": []
+  "requires": [],
+  "category": "System"
 }

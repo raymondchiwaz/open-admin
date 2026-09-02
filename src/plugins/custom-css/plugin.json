@@ -1,0 +1,14 @@
+{
+  "id": "custom-css",
+  "name": "Custom CSS",
+  "version": "1.0.0",
+  "description": "Style the admin to match your brand: add your own CSS, preview it with one-click presets and apply it live across every connected browser.",
+  "author": "Open Admin contributors",
+  "icon": "🎨",
+  "category": "Tools",
+  "defaultDisabled": true,
+  "pages": [{ "path": "custom-css", "title": "Custom CSS", "icon": "🎨", "order": 540 }],
+  "widgets": [],
+  "provides": [],
+  "requires": []
+}

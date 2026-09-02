@@ -1,0 +1,13 @@
+{
+  "id": "api-keys",
+  "name": "API Keys",
+  "version": "1.0.0",
+  "description": "Issue and revoke bearer-token API keys for scripts and integrations. Keys are shown once, then stored as SHA-256 hashes only.",
+  "author": "Open Admin contributors",
+  "icon": "🔑",
+  "category": "Tools",
+  "defaultDisabled": true,
+  "pages": [{ "path": "api-keys", "title": "API Keys", "icon": "🔑", "order": 520 }],
+  "provides": ["api-keys.verify"],
+  "requires": []
+}

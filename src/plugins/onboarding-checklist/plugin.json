@@ -1,0 +1,13 @@
+{
+  "id": "onboarding-checklist",
+  "name": "Get Started",
+  "version": "1.0.0",
+  "description": "A setup checklist with a dashboard widget and progress bar: name your site, post an update, install a plugin, receive feedback and explore the Plugins page. Auto-completes as you go.",
+  "author": "Open Admin contributors",
+  "icon": "🧭",
+  "category": "General",
+  "pages": [{ "path": "onboarding", "title": "Get Started", "icon": "🧭", "order": 190 }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "onboarding-checklist", "order": 50 }],
+  "provides": [],
+  "requires": []
+}

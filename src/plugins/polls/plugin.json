@@ -1,0 +1,14 @@
+{
+  "id": "polls",
+  "name": "Polls",
+  "version": "1.0.0",
+  "description": "Quick team polls with live results: create, vote once per browser, close, and see the winner in the Social feed.",
+  "author": "Open Admin contributors",
+  "icon": "🗳️",
+  "category": "General",
+  "defaultDisabled": false,
+  "pages": [{ "path": "polls", "title": "Polls", "icon": "🗳️", "order": 170 }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "polls-active", "order": 25 }],
+  "provides": [],
+  "requires": []
+}

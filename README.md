@@ -74,15 +74,39 @@ See [docs/getting-started.md](docs/getting-started.md) and [docs/embedding.md](d
 
 ## What ships in the box
 
-| Plugin | What it does |
-| --- | --- |
-| Dashboard | The overview grid — itself a plugin; disable it and the admin keeps working |
-| Social Admin | Live activity feed built on the event bus, plus the site feedback widget |
-| Users | User list and management |
-| Settings | Site name and preferences |
-| Plugin Manager | Enable/disable plugins, inspect capabilities, check for updates |
-| Shop Stats *(example)* | A disabled-by-default "third-party" plugin: revenue widgets + feed posts |
-| Uptime Monitor *(example)* | Periodic checks posted to the feed via `ctx.every()` |
+**27 plugins.** Sidebar items are grouped by `category` (General · Content · Insights · System · Tools); the ten
+"app-store" plugins ship disabled and can be installed live from Social Admin's **Suggested plugins** rail or the
+Plugin Manager.
+
+| Plugin | Category | What it does |
+| --- | --- | --- |
+| Social Admin | General | The social feed + feedback board — the home page |
+| Dashboard | General | The overview grid, assembled from every plugin's widgets |
+| Users | General | User list and management |
+| Tasks ✅ | General | Team task board (todo/doing/done) + dashboard widget |
+| Announcements 📣 | General | Site-wide banner composer + history |
+| Team Notes 📝 | General | Color-coded shared sticky notes |
+| Polls 🗳️ | General | Create/vote polls; results bars (vote from the dashboard too) |
+| Get Started 🧭 | General | First-run onboarding checklist, auto-tracked |
+| Notifications 🔔 | General | Bell + inbox fed by every event in the system |
+| Deploys 🚢 | Content | Deploy tracker with finish/rollback + feed posts |
+| Analytics 📈 | Insights | 14-day event charts + `analytics.track` capability |
+| Shop Stats *(example)* | Insights | Third-party example: revenue widgets + live shop activity |
+| Activity Log 📜 | System | Every event on the bus, searchable (ring buffer, live) |
+| System Info 🖥️ | System | Node/memory/uptime + store stats |
+| Health Checks 📡 | System | URL probes with failure/recovery feed posts |
+| Status Page 🌍 | System | Public `/status-page` + `/api/status`, fed by health checks |
+| Incidents 🚨 | System | Incident timeline with severity + resolution flow |
+| Plugin Manager | System | Enable/disable/inspect any plugin (including itself) |
+| Settings | System | Site name, theme, prefs |
+| API Keys 🔑 | Tools | Generate/revoke tokens, `api-keys.verify` capability |
+| Backups 💾 | Tools | One-click + scheduled snapshots of the JSON store |
+| Scheduled Jobs ⏰ | Tools | Cron-style jobs (feed posts / http ping / kv touch) |
+| Custom CSS 🎨 | Tools | Brand the admin with your own CSS + presets |
+| Data Inspector 🗄️ | Tools | Browse the JSON store and kv (read-only, secret-masked) |
+| Webhooks 🪝 | Tools | HMAC-signed outbound webhooks on any event, with logs |
+| Command Palette ⌘ | Tools | Ctrl/Cmd+K fuzzy finder for pages and actions |
+| Uptime Monitor *(example)* | System | Periodic status pings posted to the feed |
 
 ## Write a plugin
 
@@ -92,7 +116,7 @@ A plugin is a directory with a `plugin.json` manifest, an optional server-side `
 my-plugin/
 ├── plugin.json    # id, name, pages, widgets, provides, requires
 ├── index.js       # server side:  exports { init(ctx), destroy(ctx) }
-└── client.js      # browser side: export default { pages, widgets }
+└── client.js      # browser side: export default { register(OA) }
 ```
 
 ```json

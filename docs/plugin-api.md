@@ -156,3 +156,22 @@ Any event you `notify()` reaches connected browsers over SSE at `/api/events/str
 ## Complete example
 
 Read [`src/plugins/shop-stats`](../src/plugins/shop-stats) — a self-contained "third-party" plugin with a page, a dashboard widget, its own API route, namespaced storage, a timer, and Social-feed integration via `ctx.activity()`.
+
+### Store introspection (system tools)
+
+`ctx.store` also exposes admin-privileged helpers for tools like the Data Inspector:
+
+- `ctx.store.collections()` — names of **all** collections across every plugin
+- `ctx.store.kvAll()` — a snapshot of the whole kv store (keys matching
+  `/secret|token|password|hash/i` should be masked by consumers)
+- `ctx.dataDir` — the kernel's data directory (server-side only)
+
+Use these only inside system/administration plugins, not ordinary features.
+
+### Manifest extras
+
+- `category`: `"General" | "Content" | "Insights" | "System" | "Tools"` — groups the plugin's
+  pages in the sidebar (default `"General"`).
+- Plugin routes are matched at **any** path (not just `/api/...`), so a plugin can serve a
+  public page like `/status-page`. Routes for `/status-page` and `/api/status`, plus
+  `POST /api/social/feedback`, are exempt from the kernel's `auth` hook.

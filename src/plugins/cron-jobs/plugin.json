@@ -1,0 +1,12 @@
+{
+  "id": "cron-jobs",
+  "name": "Scheduled Jobs",
+  "version": "1.0.0",
+  "description": "Run recurring tasks on a schedule — Social feed activity, HTTP pings for uptime checks, or a KV tick for custom logic.",
+  "author": "Open Admin contributors",
+  "icon": "⏰",
+  "category": "Tools",
+  "defaultDisabled": true,
+  "pages": [{ "path": "cron-jobs", "title": "Scheduled Jobs", "icon": "⏰", "order": 530 }],
+  "requires": []
+}

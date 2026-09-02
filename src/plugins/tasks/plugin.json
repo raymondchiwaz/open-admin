@@ -1,0 +1,14 @@
+{
+  "id": "tasks",
+  "name": "Tasks",
+  "version": "1.0.0",
+  "description": "A three-column task board: Todo / Doing / Done with priorities, assignees, live updates and a dashboard summary widget.",
+  "author": "Open Admin contributors",
+  "icon": "✅",
+  "category": "General",
+  "defaultDisabled": false,
+  "pages": [{ "path": "tasks", "title": "Tasks", "icon": "✅", "order": 120 }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "tasks-summary", "order": 20 }],
+  "provides": [],
+  "requires": []
+}

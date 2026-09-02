@@ -127,6 +127,7 @@ class PluginManager {
         description: meta.description || '',
         author: meta.author || '',
         icon: meta.icon || '🧩',
+        category: meta.category || 'General',
         pages: meta.pages.length,
         requires: meta.requires || [],
         provides: meta.provides || [],
@@ -151,7 +152,7 @@ class PluginManager {
     for (const { meta, enabled } of this._plugins.values()) {
       if (!enabled) continue;
       for (const page of meta.pages) {
-        items.push({ ...page, pluginId: meta.id, pluginIcon: meta.icon });
+        items.push({ ...page, pluginId: meta.id, pluginIcon: meta.icon, category: meta.category || 'General' });
       }
     }
     items.sort((a, b) => (a.order || 0) - (b.order || 0) || a.path.localeCompare(b.path));

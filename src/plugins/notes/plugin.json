@@ -1,0 +1,14 @@
+{
+  "id": "notes",
+  "name": "Team Notes",
+  "version": "1.0.0",
+  "description": "Pinned sticky notes for the team: colored, editable, live — with a dashboard widget showing recent and pinned notes.",
+  "author": "Open Admin contributors",
+  "icon": "📝",
+  "category": "General",
+  "defaultDisabled": false,
+  "pages": [{ "path": "notes", "title": "Team Notes", "icon": "📝", "order": 160 }],
+  "widgets": [{ "slot": "dashboard.grid", "id": "notes-recent", "order": 30 }],
+  "provides": [],
+  "requires": []
+}
