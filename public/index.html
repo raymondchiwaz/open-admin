@@ -2,22 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#26705b">
+  <meta name="description" content="Your workspace, in the loop. A simple open-source admin dashboard for activity, tasks, and feedback.">
   <title>Open Admin</title>
   <link rel="icon" href="__OA_BASE__/oa/favicon.svg">
   <link rel="stylesheet" href="__OA_BASE__/oa/css/base.css">
   <link rel="stylesheet" href="__OA_BASE__/oa/css/social.css">
+  <link rel="stylesheet" href="__OA_BASE__/oa/css/workspace.css">
   <script>window.OA_BASE = '__OA_BASE__';</script>
 </head>
 <body>
+  <a class="oa-skip" href="#content">Skip to content</a>
+  <div class="oa-scrim" id="scrim" hidden></div>
   <div class="oa-app">
-    <aside class="oa-sidebar" id="sidebar"></aside>
+    <aside class="oa-sidebar" id="sidebar" aria-label="Admin navigation"></aside>
     <div class="oa-main">
       <header class="oa-topbar" id="topbar"></header>
-      <main class="oa-content" id="content"></main>
+      <main class="oa-content" id="content" tabindex="-1"></main>
     </div>
   </div>
-  <div class="oa-toasts" id="toasts"></div>
+  <div class="oa-toasts" id="toasts" role="status" aria-live="polite"></div>
   <script type="module" src="__OA_BASE__/oa/js/app.js"></script>
 </body>
 </html>

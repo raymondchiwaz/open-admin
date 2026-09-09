@@ -10,6 +10,8 @@
  */
 
 const { OpenAdminKernel } = require('./core/kernel');
+const pipeline = require('./integrations/pipeline');
+const nextBridge = require('./integrations/next-bridge');
 
 async function createOpenAdmin(options = {}) {
   const kernel = new OpenAdminKernel(options);
@@ -31,4 +33,4 @@ function mount(options = {}) {
   };
 }
 
-module.exports = { createOpenAdmin, mount, OpenAdminKernel };
+module.exports = { createOpenAdmin, mount, OpenAdminKernel, pipeline, nextBridge };

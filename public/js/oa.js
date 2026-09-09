@@ -31,7 +31,8 @@ function timeAgo(iso) {
 
 function avatar(author, size = 40) {
   const a = author || {};
-  return `<div class="oa-avatar ${esc(a.color || 'g4')}" style="--s:${size}px" title="${esc(a.handle || a.name)}">${esc(a.avatar || '🙂')}</div>`;
+  const initials = (a.name || 'Admin').split(/[\s-]+/).slice(0, 2).map((s) => s[0]).join('').toUpperCase();
+  return `<div class="oa-avatar ${esc(a.color || 'g4')}" style="--s:${size}px" title="${esc(a.handle || a.name)}">${esc(initials)}</div>`;
 }
 
 const OA = {
@@ -44,6 +45,13 @@ const OA = {
   async init() {
     this.data = await this.api('/api/bootstrap');
     const sse = new EventSource(this.base + '/api/events/stream');
+    this.connection = 'connecting';
+    const connectionChanged = (state) => {
+      this.connection = state;
+      for (const fn of listeners.get('connection.changed') || []) fn(state);
+    };
+    sse.onopen = () => connectionChanged('live');
+    sse.onerror = () => connectionChanged('reconnecting');
     sse.onmessage = (e) => {
       let msg;
       try { msg = JSON.parse(e.data); } catch { return; }
@@ -139,11 +147,26 @@ const OA = {
 
   /* ── shared rendering helpers ─────────────────────────────────────────── */
   esc, md, timeAgo, avatar,
+  icon(name, size = 18) {
+    return `<img class="oa-icon" src="${this.base}/oa/icons/${esc(name)}.svg" width="${size}" height="${size}" alt="" aria-hidden="true">`;
+  },
 
   statusChip(status) {
     if (!status) return '';
     const cls = { ok: 'ok', info: 'info', warn: 'warn', error: 'error' }[status.level] || 'info';
     return `<span class="oa-chip ${cls}">${esc(status.label)}</span>`;
+  },
+
+  /* ── compact / mobile helpers for plugin authors ────────────────────── */
+
+  /** True when the admin is in its compact (drawer-nav) layout. */
+  isCompact() {
+    return window.matchMedia('(max-width: 900px)').matches;
+  },
+
+  /** Wrap a `<table class="oa-table">…` string so it scrolls horizontally on phones. */
+  tableWrap(tableHtml) {
+    return `<div class="oa-table-wrap">${tableHtml}</div>`;
   },
 
   /* Local ("just me") reaction tracking so reactions toggle. */

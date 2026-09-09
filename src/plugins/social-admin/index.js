@@ -139,11 +139,28 @@ module.exports = {
       const tab = req.searchParams.get('tab') || 'all';
       const kinds = TAB_KINDS[tab];
       let list = posts.all();
+      const sources = [...new Set(list.map((p) => p.source).filter(Boolean))].sort();
       if (kinds) list = list.filter((p) => kinds.includes(p.kind));
+      if (tab === 'attention') list = list.filter((p) => !p.resolved &&
+        (p.kind === 'update' || ['warn', 'error'].includes(p.status?.level)));
+      if (tab === 'saved') {
+        const ids = new Set((req.searchParams.get('ids') || '').split(',').filter(Boolean));
+        list = list.filter((p) => ids.has(p.id));
+      }
       const tag = req.searchParams.get('tag');
       if (tag) list = list.filter((p) => (p.tags || []).includes(tag));
+      const source = req.searchParams.get('source');
+      if (source) list = list.filter((p) => p.source === source);
+      const q = (req.searchParams.get('q') || '').trim().toLowerCase();
+      if (q) list = list.filter((p) => [p.text, p.author?.name, ...(p.tags || []).map((t) => '#' + t)]
+        .join(' ').toLowerCase().includes(q));
       list = [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-      ctx.json(res, 200, { posts: list.slice(0, Number(req.searchParams.get('limit') || 60)) });
+      const number = (value, fallback) => value !== null && Number.isFinite(Number(value)) ? Math.floor(Number(value)) : fallback;
+      const limit = Math.max(1, Math.min(100, number(req.searchParams.get('limit'), 60)));
+      const offset = Math.max(0, number(req.searchParams.get('offset'), 0));
+      const page = list.slice(offset, offset + limit);
+      ctx.json(res, 200, { posts: page, total: list.length, sources,
+        hasMore: offset + page.length < list.length, nextOffset: offset + page.length });
     });
 
     ctx.registerRoute('POST', '/api/social/posts', async (req, res) => {
@@ -212,8 +229,7 @@ module.exports = {
     // ── Feedback board ────────────────────────────────────────────────────
     // Public on purpose: this is the endpoint the site visitor widget posts to.
     ctx.registerRoute('GET', '/api/social/feedback', (req, res) => {
-      const list = [...feedback.all()].sort((a, b) =>
-        (b.upvotes - a.upvotes) || b.createdAt.localeCompare(a.createdAt));
+      const list = [...feedback.all()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       ctx.json(res, 200, {
         feedback: list,
         open: list.filter((f) => f.status !== 'shipped').length,
@@ -271,16 +287,17 @@ module.exports = {
       const week = 7 * 24 * 3600 * 1000;
       const pendingUpdates = all.filter((p) =>
         p.kind === 'update' && !p.resolved && Date.now() - new Date(p.createdAt).getTime() < week).length;
-      const errors = ctx.store.getState('errors24h', 2);
-      const visitors = ctx.store.getState('visitorsNow', 24);
+      const errors = ctx.store.getState('errors24h', null);
+      const visitors = ctx.store.getState('visitorsNow', null);
+      const uptime = ctx.store.getState('uptime', null);
       ctx.json(res, 200, {
         stories: [
-          { id: 'uptime', label: 'Uptime', icon: '🟢', value: (ctx.store.getState('uptime', 99.98)) + '%', level: 'ok', ring: 'r-ok' },
-          { id: 'deploys', label: 'Deploys 24h', icon: '🚀', value: String(deploys || 1), level: 'info', ring: 'r-info' },
+          { id: 'uptime', label: 'Uptime', icon: '🟢', value: uptime === null ? 'Not connected' : uptime + '%', level: uptime === null ? 'info' : 'ok', ring: 'r-info' },
+          { id: 'deploys', label: 'Deploys 24h', icon: '🚀', value: String(deploys), level: 'info', ring: 'r-info' },
           { id: 'updates', label: 'Updates', icon: '📦', value: `${pendingUpdates} ready`, level: pendingUpdates > 0 ? 'info' : 'ok', ring: 'r-info' },
           { id: 'feedback', label: 'Feedback', icon: '💬', value: `${openFeedback} open`, level: openFeedback > 3 ? 'warn' : 'ok', ring: openFeedback > 3 ? 'r-warn' : 'r-ok' },
-          { id: 'errors', label: 'Errors 24h', icon: '🐞', value: String(errors), level: errors > 5 ? 'error' : errors > 2 ? 'warn' : 'ok', ring: errors > 2 ? 'r-warn' : 'r-ok' },
-          { id: 'visitors', label: 'Visitors now', icon: '👥', value: String(visitors), level: 'info', ring: 'r-info' },
+          { id: 'errors', label: 'Errors 24h', icon: '🐞', value: errors === null ? 'Not connected' : String(errors), level: errors === null ? 'info' : errors > 5 ? 'error' : errors > 2 ? 'warn' : 'ok', ring: errors > 2 ? 'r-warn' : 'r-info' },
+          { id: 'visitors', label: 'Visitors now', icon: '👥', value: visitors === null ? 'Not connected' : String(visitors), level: 'info', ring: 'r-info' },
         ],
       });
     });
@@ -290,7 +307,7 @@ module.exports = {
       for (const p of posts.all()) for (const t of p.tags || []) counts.set(t, (counts.get(t) || 0) + 1);
       const trending = [...counts.entries()]
         .map(([tag, count]) => ({ tag, count }))
-        .sort((a, b) => b.count - a.count)
+        .sort((a, b) => a.tag.localeCompare(b.tag))
         .slice(0, 6);
       ctx.json(res, 200, { trending });
     });

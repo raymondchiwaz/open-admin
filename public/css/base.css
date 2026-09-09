@@ -230,7 +230,55 @@ code { background: var(--panel-2); border: 1px solid var(--border); border-radiu
 .oa-fade-in { animation: oa-fadein 0.18s ease; }
 @keyframes oa-fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
+.oa-skip {
+  position: absolute; left: -999px; top: 0; background: var(--accent); color: #fff;
+  padding: 8px 14px; border-radius: 0 0 10px 0; z-index: 200;
+}
+.oa-skip:focus { left: 0; }
+.oa-scrim {
+  position: fixed; inset: 0; background: rgba(10, 12, 24, 0.45); z-index: 39; border: none;
+}
+.oa-menu-btn { display: none; }
+.oa-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; padding: 0 4px; }
+
+/* ── Compact / mobile ─────────────────────────────────────────────────── */
 @media (max-width: 900px) {
-  .oa-sidebar { width: 68px; flex-basis: 68px; padding: 12px 8px; }
-  .oa-brand-text, .oa-nav-item span:last-child, .oa-sidebar-foot { display: none; }
+  body { font-size: 14px; }
+  .oa-content { padding: 14px 14px 90px; }
+  .oa-topbar { padding: 0 12px; height: 56px; gap: 8px; }
+  .oa-topbar-title h1 { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46vw; }
+  .oa-topbar-sub { display: none; }
+  .oa-menu-btn {
+    display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 auto;
+    border-radius: 10px; border: 1px solid var(--border); background: var(--panel); font-size: 18px;
+  }
+  .oa-sidebar {
+    position: fixed; z-index: 40; left: 0; top: 0; bottom: 0; width: 272px; flex-basis: 272px;
+    transform: translateX(-105%); transition: transform 0.22s ease; height: 100dvh;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25); padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+  body.oa-nav-open .oa-sidebar { transform: none; }
+  /* Restore full sidebar content on mobile (it doubles as the drawer). */
+  .oa-brand-text, .oa-sidebar-foot { display: flex; }
+  .oa-sidebar-foot { flex-direction: column; }
+  .oa-nav-item span:last-child { display: inline; }
+  .oa-nav-item { padding: 12px; font-size: 15px; }
+  .oa-grid { grid-template-columns: 1fr; }
+  .oa-form-row { flex-direction: column; }
+  .oa-card { padding: 14px; }
+  /* Third-party / generated plugin tables that aren't wrapped in
+   * .oa-table-wrap yet still scroll instead of breaking the layout. */
+  .oa-card { overflow-x: auto; }
+  .oa-stat .num { font-size: 26px; }
+  .oa-table { min-width: 640px; }
+  .oa-bell-pop {
+    position: fixed; top: 60px; left: 12px; right: 12px; width: auto; max-height: 60vh;
+  }
+  .oa-toasts { left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .oa-toast { min-width: 0; max-width: none; width: 100%; }
+  .oa-btn, .oa-icon-btn { min-height: 40px; }
+}
+
+@media (min-width: 901px) {
+  body.oa-nav-open .oa-scrim { display: none; }
 }

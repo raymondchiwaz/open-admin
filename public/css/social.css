@@ -138,3 +138,19 @@
   .oa-social { grid-template-columns: 1fr; }
   .oa-rail { order: 2; }
 }
+
+@media (max-width: 640px) {
+  .oa-composer { padding: 12px; }
+  .oa-composer-foot { flex-direction: column; align-items: stretch; }
+  .oa-post { padding: 13px 14px; }
+  .oa-post-actions { gap: 8px; }
+  .oa-story { min-width: 64px; }
+  .oa-story-ring { width: 56px; height: 56px; }
+  .oa-story-ring .inner { width: 47px; height: 47px; font-size: 21px; }
+  .oa-tabs { overflow-x: auto; scrollbar-width: none; }
+  .oa-tabs::-webkit-scrollbar { display: none; }
+  .oa-tab { white-space: nowrap; }
+  .oa-fb-item { flex-direction: column; gap: 10px; }
+  .oa-fb-vote { flex-direction: row; min-width: 0; align-self: flex-start; gap: 8px; padding: 6px 12px; }
+  .oa-update-item { flex-wrap: wrap; }
+}

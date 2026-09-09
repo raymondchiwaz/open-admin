@@ -21,16 +21,37 @@ const { PluginManager } = require('./plugin-manager');
 const { Updates } = require('./updates');
 const { Router, readBody, json, serveStatic, SSEHub } = require('./http');
 
-const PUBLIC_DIR = path.join(__dirname, '..', '..', 'public');
-const BUILTIN_PLUGINS_DIR = path.join(__dirname, '..', 'plugins');
+const PUBLIC_DIR =
+  typeof __dirname !== 'undefined' && __dirname
+    ? path.join(__dirname, '..', '..', 'public')
+    : '';
+const BUILTIN_PLUGINS_DIR =
+  typeof __dirname !== 'undefined' && __dirname
+    ? path.join(__dirname, '..', 'plugins')
+    : '';
 
 const DEFAULT_OPTIONS = {
   port: 4170,
   host: '127.0.0.1',
-  dataDir: path.join(process.cwd(), '.open-admin-data'),
+  // Never call process.cwd() unguarded: it can throw on runtimes with no real
+  // working directory (e.g. Workers). A store can be injected by host apps,
+  // so this is only a fallback for standalone Node.
+  dataDir: (() => {
+    try {
+      return typeof process !== 'undefined' && typeof process.cwd === 'function'
+        ? path.join(process.cwd(), '.open-admin-data')
+        : '.open-admin-data';
+    } catch {
+      return '.open-admin-data';
+    }
+  })(),
   siteName: 'My Site',
   basePath: '',
   plugins: [],          // extra plugin directories to load
+  pluginDefs: [],       // in-memory plugin definitions (bundled hosts, no fs)
+  serverModules: {},    // id -> { init(ctx), destroy(ctx)? } (no require())
+  assets: {},           // relPath -> { content, type } (bundled hosts, no fs)
+  store: null,          // pre-built store adapter (KV, memory, …)
   auth: null,           // async (req) => true|false, checked on everything except public feedback
 };
 
@@ -38,7 +59,9 @@ class OpenAdminKernel {
   constructor(options = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options };
     this.siteName = this.options.siteName;
-    this.store = new Store(this.options.dataDir);
+    // Allow a pre-built store (e.g. a KV-backed adapter) to be injected so the
+    // kernel can run on runtimes without a writable filesystem (Workers).
+    this.store = this.options.store || new Store(this.options.dataDir);
     this.bus = new EventBus();
     this.capabilities = new Capabilities();
     this.sse = new SSEHub();
@@ -67,6 +90,9 @@ class OpenAdminKernel {
       for (const dir of this.options.plugins || []) {
         this.plugins.loadDir(path.resolve(dir));
       }
+      for (const def of this.options.pluginDefs || []) {
+        this.plugins.loadDefinition(def);
+      }
       await this.plugins.activateAll();
       require('./seed')(this); // first-run demo data (idempotent)
       return this;
@@ -75,6 +101,10 @@ class OpenAdminKernel {
   }
 
   _builtinPluginDirs() {
+    // Bundled runtimes (e.g. Workers) inject pluginDefs from memory — there is
+    // no plugins directory on disk. Bail out early: readdirSync('') would
+    // otherwise list the bundle root and feed garbage dirs to loadDir.
+    if (!BUILTIN_PLUGINS_DIR) return [];
     try {
       return fs
         .readdirSync(BUILTIN_PLUGINS_DIR, { withFileTypes: true })
@@ -100,6 +130,7 @@ class OpenAdminKernel {
     for (const timers of this._timers.values()) timers.forEach(clearInterval);
     this._timers.clear();
     if (this._server) await new Promise((resolve) => this._server.close(resolve));
+    if (typeof this.store.flushAll === 'function') await this.store.flushAll();
   }
 
   // ── Plugin context ───────────────────────────────────────────────────────
@@ -269,14 +300,35 @@ class OpenAdminKernel {
   /** index.html with the __OA_BASE__ placeholder replaced, so the same SPA
    *  works standalone and when mounted at e.g. /admin. */
   _serveIndex(res) {
-    if (!this._indexHtml) {
-      this._indexHtml = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
+    let html;
+    const asset = (this.options.assets || {})['index.html'];
+    if (asset) {
+      html = typeof asset.content === 'string' ? asset.content : Buffer.from(asset.content).toString('utf8');
+    } else {
+      if (!this._indexHtml) {
+        this._indexHtml = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
+      }
+      html = this._indexHtml;
     }
     const base = this.options.basePath
       ? (this.options.basePath.startsWith('/') ? this.options.basePath : '/' + this.options.basePath)
       : '';
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
-    res.end(this._indexHtml.replace(/__OA_BASE__/g, base.replace(/\/$/, '')));
+    res.end(html.replace(/__OA_BASE__/g, base.replace(/\/$/, '')));
+  }
+
+  /** Serve a bundled asset from the injected assets map. Returns true if served. */
+  _serveAsset(relPath, res) {
+    const asset = (this.options.assets || {})[relPath];
+    if (!asset) return false;
+    const type = asset.type || 'application/octet-stream';
+    const isHtml = /^text\/html/.test(type);
+    res.writeHead(200, {
+      'Content-Type': type,
+      'Cache-Control': isHtml ? 'no-cache' : 'public, max-age=60',
+    });
+    res.end(typeof asset.content === 'string' ? asset.content : Buffer.from(asset.content));
+    return true;
   }
 
   // ── The one request handler (works standalone and as middleware) ─────────
@@ -317,6 +369,7 @@ class OpenAdminKernel {
       // 1) Plugin client assets: /oa/plugins/<id>/<file>
       const pluginAsset = pathname.match(/^\/oa\/plugins\/([a-z0-9-]+)\/(.+)$/);
       if (pluginAsset) {
+        if (this._serveAsset(`oa/plugins/${pluginAsset[1]}/${pluginAsset[2]}`, res)) return;
         const dir = this.plugins.dirOf(pluginAsset[1]);
         if (dir && serveStatic(dir, pluginAsset[2], res)) return;
         json(res, 404, { error: 'plugin asset not found' });
@@ -329,6 +382,7 @@ class OpenAdminKernel {
         const rel = pathname.startsWith('/oa/')
           ? pathname.slice('/oa/'.length)
           : pathname.replace(/^\/+/, '');
+        if (this._serveAsset(rel, res)) return;
         if (serveStatic(PUBLIC_DIR, rel, res)) return;
       }
 

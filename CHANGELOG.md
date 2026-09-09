@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Pipeline integration layer for existing admin backends (Guava.land-style):
+  `src/integrations/pipeline.js` (`adaptExistingAdmin()` turns your current
+  data functions into plugins — server routes + mobile-friendly client UI,
+  in memory, no filesystem) and `src/integrations/next-bridge.js`
+  (`createNextBridge()` mounts the kernel in Next.js App Router routes next
+  to an untouched `/admin`). New docs (`docs/pipeline-integration.md`),
+  runnable example (`examples/guava-pipeline.js`), and tests
+  (`tests/pipeline-integration.test.js`).
+- Kernel host options for bundled/edge runtimes: `store`, `pluginDefs`,
+  `serverModules`, `assets` (plus `loadDefinition()` on the plugin manager).
+
+### Changed
+
+- Mobile-compact admin shell: off-canvas sidebar drawer (hamburger, scrim,
+  `Esc`/navigate to close), single-column grids, horizontally scrolling
+  tables (`.oa-table-wrap`, with `.oa-card` fallback), full-width toasts,
+  safe-area support, and `OA.isCompact()` / `OA.tableWrap()` helpers for
+  plugin authors.
+
 ## [1.1.0] - 2026-09-02
 
 ### Added

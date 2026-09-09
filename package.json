@@ -9,6 +9,7 @@
   },
   "files": [
     "src",
+    "public",
     "bin",
     "docs",
     "examples",

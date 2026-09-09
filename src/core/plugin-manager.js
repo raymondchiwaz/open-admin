@@ -41,10 +41,47 @@ class PluginManager {
     if (this._plugins.has(meta.id)) {
       throw new Error(`duplicate plugin id "${meta.id}" (${dir})`);
     }
-    let serverModule = null;
-    const entry = path.join(dir, 'index.js');
-    if (fs.existsSync(entry)) serverModule = require(entry);
-    this._plugins.set(meta.id, { meta, serverModule, enabled: false, ctx: null });
+    // Server modules may be injected by the host via `options.serverModules`
+    // so the kernel never issues a dynamic require() (which cannot be bundled
+    // for edge runtimes). Fall back to require() on plain Node hosts.
+    const injected = (this.kernel.options.serverModules || {})[meta.id];
+    let serverModule = injected !== undefined ? injected : null;
+    if (serverModule === null) {
+      const entry = path.join(dir, 'index.js');
+      if (fs.existsSync(entry)) serverModule = require(entry);
+    }
+    this._plugins.set(meta.id, { meta, serverModule, enabled: false, ctx: null, hasClient: undefined });
+    return meta;
+  }
+
+  /**
+   * Register a plugin from an injected definition (no filesystem). Used on
+   * runtimes without a filesystem (edge workers) and by hosts that bundle
+   * their own admin pipelines: `index.js`/`plugin.json` are passed in by the
+   * host instead of read from disk.
+   * `def` = { id, meta, serverModule, hasClient, dir }.
+   */
+  loadDefinition(def) {
+    const meta = def.meta || {};
+    meta.id = meta.id || def.id;
+    meta.dir = def.dir || null;
+    meta.pages = meta.pages || [];
+    meta.widgets = meta.widgets || [];
+    meta.requires = meta.requires || [];
+    meta.provides = meta.provides || [];
+    if (!meta.id || !/^[a-z0-9][a-z0-9-]*$/.test(meta.id)) {
+      throw new Error('plugin definition has an invalid or missing id');
+    }
+    if (this._plugins.has(meta.id)) {
+      throw new Error(`duplicate plugin id "${meta.id}"`);
+    }
+    this._plugins.set(meta.id, {
+      meta,
+      serverModule: def.serverModule || null,
+      enabled: false,
+      ctx: null,
+      hasClient: Boolean(def.hasClient),
+    });
     return meta;
   }
 
@@ -200,7 +237,10 @@ class PluginManager {
   clientEntryIds() {
     const fsEntries = [];
     for (const [id, record] of this._plugins) {
-      if (record.enabled && fs.existsSync(path.join(record.meta.dir, 'client.js'))) fsEntries.push(id);
+      const hasClient = record.hasClient !== undefined
+        ? record.hasClient
+        : (record.meta.dir ? fs.existsSync(path.join(record.meta.dir, 'client.js')) : false);
+      if (record.enabled && hasClient) fsEntries.push(id);
     }
     return fsEntries;
   }

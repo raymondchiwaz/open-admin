@@ -90,7 +90,7 @@ export default {
       btn.type = 'button';
       btn.title = 'Notifications';
       btn.setAttribute('aria-label', 'Notifications');
-      btn.innerHTML = `🔔<span class="oa-badge" hidden></span>`;
+      btn.innerHTML = `${OA.icon('bell')}<span class="oa-badge" hidden></span>`;
       btn.addEventListener('click', (e) => { e.stopPropagation(); togglePop(); });
       actions.prepend(btn); // first child of .oa-topbar-actions
       fetchInbox().then(({ unread }) => setBadge(unread));

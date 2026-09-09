@@ -9,6 +9,21 @@ npx open-admin --port 4170
 # → Admin panel:  http://localhost:4170
 ```
 
+## A workspace built for your team
+
+The home feed brings activity, feedback, and tasks into one calm workspace. Updates appear in chronological order, with explicit **Load more** pagination. New events wait behind a **Show when you’re ready** button so the page stays still while you read.
+
+- **Needs attention** collects unresolved update posts and warnings/errors.
+- **Team updates**, **Feedback**, **Saved**, and source/text filters keep conversations easy to find.
+- Create and complete tasks directly from the home screen.
+- Composer drafts survive refresh and navigation. Bookmarks are private to this browser and workspace path.
+- Simplified navigation, keyboard tabs, light/dark themes, reduced motion support, and a responsive drawer.
+- Counts come from the enabled apps. Missing telemetry is labeled **Not connected**.
+
+The first run includes sample data. The app-update catalog is a demonstration; applying a demo update records a version but does not install software. The existing auth hook gates access, while posts still use the shared Admin identity; individual user sessions and permissions are not implemented by this UI redesign.
+
+See [the workspace guide](docs/workspace.md) for behavior, integration, and verification details.
+
 ## Why
 
 Most admin panels give you a shell you have to bend to your needs. Open Admin starts from the opposite premise: the kernel ships **no UI at all** — only a tiny core (store, event bus, capability registry, plugin manager, HTTP layer). The dashboard, users page, settings, even the plugin manager and the social activity feed are plugins loaded through exactly the same mechanism a third-party plugin uses. If you can write a plugin, you can change anything.
@@ -75,8 +90,7 @@ See [docs/getting-started.md](docs/getting-started.md) and [docs/embedding.md](d
 ## What ships in the box
 
 **27 plugins.** Sidebar items are grouped by `category` (General · Content · Insights · System · Tools); the ten
-"app-store" plugins ship disabled and can be installed live from Social Admin's **Suggested plugins** rail or the
-Plugin Manager.
+"app-store" plugins ship disabled and can be enabled from **Apps & integrations**.
 
 | Plugin | Category | What it does |
 | --- | --- | --- |

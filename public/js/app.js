@@ -9,7 +9,13 @@ import OA from './oa.js';
 
 OA.base = window.OA_BASE || '';
 
-await OA.init();
+try {
+  await OA.init();
+} catch (err) {
+  document.getElementById('content').innerHTML = `<div class="oa-card oa-empty"><h2>We couldn't reach your workspace.</h2><p class="muted">Check that OpenAdmin is running, then try again.</p><button class="oa-btn" id="boot-retry">Try again</button></div>`;
+  document.getElementById('boot-retry').addEventListener('click', () => location.reload());
+  throw err;
+}
 
 // Load client modules contributed by enabled plugins. A failing third-party
 // module must never take the whole admin down.
@@ -32,59 +38,58 @@ for (const id of OA.data.clients || []) {
 
 /* ── Sidebar ───────────────────────────────────────────────────────────── */
 
-const NAV_ORDER = ['General', 'Content', 'Insights', 'System', 'Tools'];
-
+const NAV_ICONS = { social: 'house', dashboard: 'layout-dashboard', users: 'users', tasks: 'square-check', notifications: 'bell', announcements: 'megaphone', notes: 'sticky-note', analytics: 'chart-no-axes-combined', 'activity-log': 'activity', 'system-info': 'activity', plugins: 'puzzle', settings: 'settings-2', onboarding: 'circle-help', polls: 'panels-top-left' };
+const NAV_TITLES = { social: 'Home feed', dashboard: 'Overview', users: 'People', plugins: 'Apps & integrations' };
+function navLink(item) {
+  return `<a class="oa-nav-item" data-path="${OA.esc(item.path)}" href="#/${OA.esc(item.path)}">${OA.icon(NAV_ICONS[item.path] || 'panels-top-left')}<span>${OA.esc(NAV_TITLES[item.path] || item.title)}</span>${item.path === 'social' ? '<span class="oa-nav-live"></span>' : ''}</a>`;
+}
 function renderSidebar() {
-  const nav = OA.data.nav;
-  const groups = new Map();
-  for (const item of nav) {
-    const cat = item.category || 'General';
-    if (!groups.has(cat)) groups.set(cat, []);
-    groups.get(cat).push(item);
-  }
-  const cats = [...groups.keys()].sort((a, b) =>
-    ((NAV_ORDER.indexOf(a) + 1 || 99) - (NAV_ORDER.indexOf(b) + 1 || 99)) ||
-    a.localeCompare(b));
-  const showLabels = cats.length > 1;
-  const navHtml = cats.map((cat) => `
-    ${showLabels ? `<div class="oa-nav-label">${OA.esc(cat)}</div>` : ''}
-    ${groups.get(cat).map((item) => `
-      <a class="oa-nav-item" data-path="${OA.esc(item.path)}" href="#/${OA.esc(item.path)}">
-        <span class="oa-nav-icon">${item.icon || '📄'}</span>
-        <span>${OA.esc(item.title)}</span>
-      </a>`).join('')}`).join('');
-
+  const primary = ['social', 'dashboard', 'tasks', 'users', 'notes', 'analytics'];
+  const utility = ['plugins', 'settings'];
+  const extra = OA.data.nav.filter((n) => !primary.includes(n.path) && !utility.includes(n.path));
+  const find = (paths) => paths.map((path) => OA.data.nav.find((n) => n.path === path)).filter(Boolean).map(navLink).join('');
   document.getElementById('sidebar').innerHTML = `
-    <div class="oa-brand">
-      <span class="oa-brand-logo">💬</span>
-      <span class="oa-brand-text"><strong>${OA.esc(OA.siteName)}</strong><small>Open Admin</small></span>
-    </div>
-    <nav class="oa-nav">${navHtml}</nav>
-    <div class="oa-sidebar-foot">
-      <div class="oa-pill-row">
-        <span class="oa-pill">${OA.data.plugins.filter((p) => p.enabled).length} plugins</span>
-        <span class="oa-pill">v${OA.esc(OA.version)}</span>
-      </div>
-      <button class="oa-theme-btn" id="theme-btn" title="Toggle theme">${OA.theme === 'dark' ? '☀️' : '🌙'} <span>Theme</span></button>
-    </div>`;
-  document.getElementById('theme-btn').addEventListener('click', () => {
-    OA.toggleTheme();
-    renderSidebar();
+    <a href="#/${OA.esc(OA.data.home)}" class="oa-brand"><span class="oa-brand-logo">${OA.icon('panels-top-left',22)}</span><span class="oa-brand-text"><strong>openadmin<span class="oa-brand-period">.</span></strong><small>Everything, a little closer.</small></span></a>
+    <div class="oa-workspace-picker"><span class="oa-workspace-letter">${OA.esc((OA.siteName[0] || 'O').toUpperCase())}</span><span><b>${OA.esc(OA.siteName)}</b><small>Your workspace</small></span></div>
+    <nav class="oa-nav" aria-label="Main navigation"><div class="oa-nav-label">Workspace</div>${find(primary)}
+      ${extra.length ? `<details class="oa-more-nav" ${extra.some(n => n.path === currentPath()) ? 'open' : ''}><summary>${OA.icon('panels-top-left')}<span>More tools</span>${OA.icon('chevron-down',14)}</summary>${extra.map(navLink).join('')}</details>` : ''}
+      <div class="oa-nav-label oa-manage-label">Manage</div>${find(utility)}
+    </nav>
+    <div class="oa-sidebar-note">${OA.icon('plug',21)}<strong>Your workspace. Your rules.</strong><p>Connect your tools and make room for what matters.</p><a href="#/plugins">Explore integrations ${OA.icon('arrow-up-right',14)}</a></div>
+    <div class="oa-sidebar-foot"><div class="oa-profile">${OA.avatar(OA.me,34)}<span><b>${OA.esc(OA.me.name)}</b><small>Workspace admin</small></span><button class="oa-icon-btn" id="theme-btn" aria-label="Switch to ${OA.theme === 'dark' ? 'light' : 'dark'} theme">${OA.icon(OA.theme === 'dark' ? 'sun' : 'moon')}</button></div><span class="oa-open-source">Open source, always. <span>v${OA.esc(OA.version)}</span></span></div>`;
+  document.getElementById('theme-btn').addEventListener('click', () => { OA.toggleTheme(); renderSidebar(); markActive(); });
+}
+function markActive() {
+  document.querySelectorAll('.oa-nav-item').forEach((node) => {
+    const active = node.dataset.path === currentPath();
+    node.classList.toggle('active', active);
+    if (active) node.setAttribute('aria-current', 'page'); else node.removeAttribute('aria-current');
   });
 }
 
 /* ── Topbar ────────────────────────────────────────────────────────────── */
 
-function renderTopbar(title, subtitle) {
-  document.getElementById('topbar').innerHTML = `
-    <div class="oa-topbar-title"><h1 id="page-title">${OA.esc(title || '')}</h1>
-      <span class="oa-topbar-sub">${OA.esc(subtitle || '')}</span></div>
-    <div class="oa-topbar-actions">
-      <button class="oa-icon-btn" id="refresh-btn" title="Reload admin">⟳</button>
-      <div class="oa-me" title="Signed in as ${OA.esc(OA.me.name)}">${OA.avatar(OA.me, 34)}</div>
-    </div>`;
-  document.getElementById('refresh-btn').addEventListener('click', () => location.reload());
+function setNavOpen(open) {
+  document.body.classList.toggle('oa-nav-open', open);
+  document.getElementById('menu-btn')?.setAttribute('aria-expanded', String(open));
+  const scrim = document.getElementById('scrim');
+  if (scrim) scrim.hidden = !open;
 }
+
+function renderTopbar(title) {
+  const path = currentPath();
+  document.getElementById('topbar').innerHTML = `
+    <div class="oa-topbar-leading"><button class="oa-menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">${OA.icon('menu')}</button><span class="oa-breadcrumb">Workspace <span>/</span></span><h1 id="page-title">${OA.esc(NAV_TITLES[path] || title || 'Home')}</h1></div>
+    <div class="oa-topbar-actions"><span class="oa-connection" id="connection-status" role="status"></span><button class="oa-icon-btn" id="refresh-btn" aria-label="Refresh workspace">${OA.icon('refresh-cw',17)}</button></div>`;
+  document.getElementById('refresh-btn').addEventListener('click', () => location.reload());
+  document.getElementById('menu-btn').addEventListener('click', () => setNavOpen(!document.body.classList.contains('oa-nav-open')));
+  updateConnection();
+}
+function updateConnection() {
+  const el = document.getElementById('connection-status');
+  if (el) { el.className = 'oa-connection ' + OA.connection; el.innerHTML = '<i></i>' + ({live: 'Live workspace', connecting: 'Connecting…', reconnecting: 'Reconnecting…'}[OA.connection] || 'Connecting…'); }
+}
+OA.on('connection.changed', updateConnection);
 
 /* ── Router ────────────────────────────────────────────────────────────── */
 
@@ -119,12 +124,16 @@ function render() {
   }
   OA.fillSlots(content);
 
-  document.querySelectorAll('.oa-nav-item').forEach((el) =>
-    el.classList.toggle('active', el.dataset.path === path));
-  document.title = `${nav ? nav.title : 'Not found'} · ${OA.siteName}`;
-  renderTopbar(nav?.title, nav ? 'by plugin ' + nav.pluginId : '');
+  markActive();
+  document.querySelector('.oa-nav-item.active')?.closest('details')?.setAttribute('open', '');
+  document.title = `${nav ? NAV_TITLES[path] || nav.title : 'Not found'} · ${OA.siteName}`;
+  renderTopbar(nav?.title);
+  // Compact mode: navigating picks a page and closes the drawer.
+  if (window.matchMedia('(max-width: 900px)').matches) setNavOpen(false);
 }
 
 window.addEventListener('hashchange', render);
+document.getElementById('scrim')?.addEventListener('click', () => setNavOpen(false));
+window.addEventListener('keydown', (e) => { if (e.key === 'Escape') setNavOpen(false); });
 renderSidebar();
 render();

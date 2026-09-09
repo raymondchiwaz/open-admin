@@ -35,6 +35,11 @@ http.createServer(async (req, res) => {
 
 A complete runnable version of this is [examples/demo-site.js](../examples/demo-site.js) — run it with `npm run demo`.
 
+To wrap **existing** admin pipelines (e.g. Guava.land's Supabase data layer)
+instead of starting from scratch, see
+[Pipeline integration](pipeline-integration.md) and
+[examples/guava-pipeline.js](../examples/guava-pipeline.js).
+
 ## Standalone without the CLI
 
 ```js
@@ -52,10 +57,14 @@ All options are optional; defaults in parentheses.
 | --- | --- |
 | `port` (`4170`) | Port for standalone `listen()` |
 | `host` (`127.0.0.1`) | Bind address for standalone `listen()` |
-| `dataDir` (`./.open-admin-data`) | JSON state directory |
+| `dataDir` (`./.open-admin-data`) | JSON state directory (skipped when `store` is injected) |
+| `store` (`null`) | Pre-built store adapter (memory, KV, …) for hosts without a writable filesystem |
 | `siteName` (`My Site`) | Name shown in the UI (changeable later in Settings) |
 | `basePath` (`''`) | Base path when mounted, e.g. `/admin` |
-| `plugins` (`[]`) | Extra plugin directories to load |
+| `plugins` (`[]`) | Extra plugin directories to load (plain Node hosts) |
+| `pluginDefs` (`[]`) | In-memory plugin definitions `{ id, meta, serverModule, hasClient }` (bundled/edge hosts) |
+| `serverModules` (`{}`) | `id → { init(ctx), destroy? }` — skips `require()`, safe to bundle |
+| `assets` (`{}`) | `relPath → { content, type }` for the SPA shell + `oa/plugins/*/client.js` |
 | `auth` (`null`) | Async `(req) => boolean` gate applied to every request |
 
 ## Authentication

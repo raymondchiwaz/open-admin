@@ -288,7 +288,7 @@ export default {
       btn.type = 'button';
       btn.title = 'Command palette (Ctrl/Cmd+K)';
       btn.setAttribute('aria-label', 'Open command palette');
-      btn.textContent = '⌘K';
+      btn.innerHTML = `${OA.icon('search', 14)}<span class="oa-search-label">Find a page or action</span><kbd>Ctrl K</kbd>`;
       btn.addEventListener('click', open);
       actions.appendChild(btn);
     }

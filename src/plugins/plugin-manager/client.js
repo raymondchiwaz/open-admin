@@ -16,8 +16,8 @@ export default {
           const cats = [...groups.keys()].sort((a, b) =>
             ((ORDER.indexOf(a) + 1 || 99) - (ORDER.indexOf(b) + 1 || 99)) || a.localeCompare(b));
           el.innerHTML = `
-            <div class="oa-page-head"><h2>Plugins</h2>
-              <p>Everything in Open Admin is a plugin — including this page. Toggle one off and watch it vanish (Social Admin will report it). Disabled plugins appear in Social Admin's "Suggested plugins" rail.</p></div>
+            <div class="oa-page-head"><h2>Apps & integrations</h2>
+              <p>Give your team the tools they need. Enable an app to add its pages and bring its activity into your shared workspace.</p></div>
             ${cats.map((cat) => `
               <h3 class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.8px;margin:22px 2px 10px">${OA.esc(cat)}</h3>
               <div class="oa-grid">
@@ -35,11 +35,11 @@ export default {
                       </label>
                     </div>
                     <p class="muted" style="font-size:13px;min-height:36px">${OA.esc(p.description || '')}</p>
-                    <div class="oa-pill-row">
+                    <details><summary class="muted" style="font-size:12px;cursor:pointer">Developer details</summary><div class="oa-pill-row" style="margin-top:8px">
                       <code style="font-size:11px">${OA.esc(p.id)}</code>
                       ${p.requires.map((r) => `<span class="oa-pill">requires ${OA.esc(r)}</span>`).join('')}
                       ${p.provides.map((c) => `<span class="oa-pill">provides ${OA.esc(c)}</span>`).join('')}
-                    </div>
+                    </div></details>
                   </div>`).join('')}
               </div>`).join('')}`;
 
