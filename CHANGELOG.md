@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add host branding, commerce navigation and links to existing management pages.
+- Improve shared controls, mobile grids, table search and 25-row pagination.
+- Isolate asynchronous page rendering and support keyboard navigation in the mobile drawer.
+- Stream Next.js live events with cancellation cleanup and wait for complete piped assets.
+- Add bundled-host options to disable filesystem plugins and demonstration records.
+- Protect private bridge responses from caching, bound bodies and reject foreign-origin mutations.
+
 - Pipeline integration layer for existing admin backends (Guava.land-style):
   `src/integrations/pipeline.js` (`adaptExistingAdmin()` turns your current
   data functions into plugins — server routes + mobile-friendly client UI,

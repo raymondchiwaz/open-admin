@@ -107,3 +107,39 @@ curl -X POST http://localhost:4170/api/events \
 ```
 
 `activity` events appear as posts in the Social feed; every event is also broadcast live to connected browsers over SSE. See [http-api.md](http-api.md).
+
+### Bundled production workspaces
+
+Hosts that provide their complete registry should set `loadBuiltins: false` and
+`seedDemo: false`. This prevents filesystem discovery and first-run demonstration
+posts, users and settings from appearing in production. Standalone defaults are
+unchanged.
+
+Use `workspace` to customize the shared shell:
+
+```js
+workspace: {
+  brand: 'Guava.land',
+  logo: '/open-admin/oa/favicon.svg',
+  primaryPaths: ['guava-orders', 'guava-products'],
+  links: [{ title: 'Guava admin', href: '/admin' }],
+  managementLinks: {
+    'guava-orders': { title: 'Manage orders', href: '/admin/orders' }
+  }
+}
+```
+
+These are trusted host configuration values. The shared shell enhances loaded
+`.oa-table` records with local search, 25-row pages and accessible scroll regions.
+Search covers the records returned by the plugin, not the entire database.
+Use `.oa-wide` for cards spanning the grid without creating extra mobile columns.
+
+The Next.js bridge streams live events, releases cancelled subscribers and waits
+for piped static files to finish. Supply `isAdminRequest` for cookie-authenticated
+hosts. Private responses use `private, no-store`; mutations with a foreign Origin
+are denied. Requests are limited to 1 MiB, matching the kernel body parser. Public
+feedback and status endpoints remain public when their plugins are installed.
+
+Set `loginPath` (for example `/admin/auth`) on the Next.js bridge to redirect
+unauthenticated HTML navigation to your existing sign-in page. API requests
+continue returning 401 so clients can handle session expiry.

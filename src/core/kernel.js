@@ -52,6 +52,9 @@ const DEFAULT_OPTIONS = {
   serverModules: {},    // id -> { init(ctx), destroy(ctx)? } (no require())
   assets: {},           // relPath -> { content, type } (bundled hosts, no fs)
   store: null,          // pre-built store adapter (KV, memory, …)
+  loadBuiltins: true,   // false for hosts that inject their complete plugin registry
+  seedDemo: true,       // false for production workspaces
+  workspace: null,     // optional brand, navigation and management links
   auth: null,           // async (req) => true|false, checked on everything except public feedback
 };
 
@@ -94,7 +97,7 @@ class OpenAdminKernel {
         this.plugins.loadDefinition(def);
       }
       await this.plugins.activateAll();
-      require('./seed')(this); // first-run demo data (idempotent)
+      if (this.options.seedDemo) require('./seed')(this); // first-run demo data (idempotent)
       return this;
     })();
     return this._ready;
@@ -104,7 +107,7 @@ class OpenAdminKernel {
     // Bundled runtimes (e.g. Workers) inject pluginDefs from memory — there is
     // no plugins directory on disk. Bail out early: readdirSync('') would
     // otherwise list the bundle root and feed garbage dirs to loadDir.
-    if (!BUILTIN_PLUGINS_DIR) return [];
+    if (!this.options.loadBuiltins || !BUILTIN_PLUGINS_DIR) return [];
     try {
       return fs
         .readdirSync(BUILTIN_PLUGINS_DIR, { withFileTypes: true })
@@ -202,6 +205,7 @@ class OpenAdminKernel {
     this._router.get('/api/bootstrap', async (req, res) => {
       json(res, 200, {
         siteName: this.siteName,
+        workspace: this.options.workspace,
         version: require('../../package.json').version,
         me: { name: 'Admin', handle: '@admin', avatar: '🫡' },
         nav: this.plugins.nav(),
