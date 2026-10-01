@@ -1,25 +1,6 @@
 'use strict';
 
-/**
- * Next.js App Router bridge for Open Admin.
- *
- * Open Admin is a Node `(req, res)` handler; Next route handlers speak Web
- * `Request`/`Response`. This helper adapts between the two so Open Admin can
- * live at e.g. `src/app/open-admin/[...path]/route.ts` while your existing
- * `/admin` pipelines keep working untouched — the exact pattern Guava.land
- * uses (`src/lib/open-admin/server.ts` + `src/app/open-admin/[...path]`).
- *
- * Usage (route.ts):
- *
- *   import { createNextBridge } from 'open-admin/src/integrations/next-bridge';
- *   const bridge = createNextBridge({ getKernel, isAdminRequest });
- *   export const GET = bridge.handler; // + POST/PUT/PATCH/DELETE/OPTIONS
- *
- * `getKernel()` must resolve `{ kernel }` where kernel has `.handler(req,res)`.
- * `isAdminRequest(request)` decides the admin gate (your Supabase/auth check).
- * `basePath` must match the kernel's `basePath` option (default '/open-admin').
- */
-
+/** Adapt Node HTTP handlers to Next.js / Web Request and Response APIs. */
 const { Readable, Writable } = require('node:stream');
 
 const PUBLIC_PATHS = [
@@ -27,14 +8,28 @@ const PUBLIC_PATHS = [
   ['GET', '/status-page'],
   ['GET', '/api/status'],
 ];
-
-function isPublicPath(method, pathname) {
-  return PUBLIC_PATHS.some(([m, p]) => m === method && p === pathname);
-}
+const HOP_HEADERS = new Set(['connection', 'transfer-encoding', 'keep-alive']);
 
 async function toNodeRequest(request) {
-  const body = await request.arrayBuffer();
-  const req = Readable.from(body.byteLength > 0 ? [Buffer.from(body)] : []);
+  // Read incrementally so a large POST cannot allocate an unbounded buffer.
+  const chunks = [];
+  let size = 0;
+  const reader = request.body?.getReader();
+  if (reader) {
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.byteLength;
+        if (size > 1024 * 1024) {
+          await reader.cancel();
+          throw Object.assign(new Error('Request body too large'), { status: 413 });
+        }
+        chunks.push(Buffer.from(value));
+      }
+    } finally { reader.releaseLock(); }
+  }
+  const req = Readable.from(chunks);
   req.method = request.method;
   req.url = request.url;
   req.headers = Object.fromEntries(request.headers.entries());
@@ -42,73 +37,110 @@ async function toNodeRequest(request) {
 }
 
 class ResponseShim extends Writable {
-  constructor() {
+  constructor(onCancel) {
     super();
     this.headers = {};
     this.status = 200;
     this.chunks = [];
     this.readable = null;
     this.controller = null;
-    this.ended = false;
+    this.sent = false;
+    this.ready = new Promise((resolve, reject) => {
+      this.resolveReady = resolve;
+      this.once('error', reject);
+    });
+    // A pipe may fail before the bridge begins awaiting ready.
+    this.ready.catch(() => {});
+    this.onCancel = onCancel;
   }
-  setHeader(key, value) { this.headers[key] = value; }
-  writeHead(status, headers) {
+  setHeader(key, value) { this.headers[key.toLowerCase()] = value; }
+  getHeader(key) { return this.headers[key.toLowerCase()]; }
+  writeHead(status, headers = {}) {
     this.status = status;
-    if (headers) Object.assign(this.headers, headers);
+    this.sent = true;
+    for (const [key, value] of Object.entries(headers)) this.setHeader(key, value);
+    if (String(this.getHeader('content-type')).includes('text/event-stream') && !this.readable) {
+      this.readable = new ReadableStream({
+        start: (controller) => { this.controller = controller; },
+        cancel: () => { this.controller = null; this.onCancel(); this.destroy(); },
+      });
+      this.resolveReady();
+    }
+    return this;
   }
   _write(chunk, _enc, callback) {
-    const buf = typeof chunk === 'string' ? Buffer.from(chunk, 'utf8') : Buffer.from(chunk);
-    if (this.controller) {
-      try { this.controller.enqueue(buf); } catch { /* stream closed */ }
-    } else {
-      this.chunks.push(buf);
-    }
+    const buf = Buffer.from(chunk);
+    if (this.controller) this.controller.enqueue(buf);
+    else this.chunks.push(buf);
     callback();
   }
   _final(callback) {
-    this.ended = true;
-    if (this.controller) {
-      try { this.controller.close(); } catch { /* already closed */ }
-    }
+    this.controller?.close();
+    this.controller = null;
+    this.resolveReady();
     callback();
   }
-  get headersSent() { return this.status !== 200 || Object.keys(this.headers).length > 0; }
+  get headersSent() { return this.sent; }
 }
 
-function toWebResponse(res) {
-  const headers = new Headers();
-  for (const [key, value] of Object.entries(res.headers)) {
-    if (['connection', 'transfer-encoding', 'keep-alive'].includes(key.toLowerCase())) continue;
-    headers.set(key, value);
-  }
-  if (res.readable) return new Response(res.readable, { status: res.status, headers });
-  return new Response(res.chunks.length ? Buffer.concat(res.chunks) : null, { status: res.status, headers });
-}
-
-function stripBase(pathname, basePath) {
-  if (pathname === basePath) return '/';
-  if (pathname.startsWith(basePath + '/')) return pathname.slice(basePath.length);
-  return pathname;
-}
-
-function createNextBridge({ getKernel, isAdminRequest, basePath = '/open-admin' } = {}) {
+function createNextBridge({ getKernel, isAdminRequest, basePath = '/open-admin', loginPath } = {}) {
   if (typeof getKernel !== 'function') throw new Error('createNextBridge requires getKernel()');
+  basePath = basePath.replace(/\/$/, '');
   async function handler(request) {
+    let detach = () => {};
     try {
       const url = new URL(request.url);
-      const stripped = stripBase(url.pathname, basePath);
-      if (!isPublicPath(request.method, stripped)) {
+      if (basePath && url.pathname !== basePath && !url.pathname.startsWith(basePath + '/')) {
+        return Response.json({ error: 'not found' }, { status: 404 });
+      }
+      const pathname = url.pathname.slice(basePath.length) || '/';
+      const isPublic = PUBLIC_PATHS.some(([m, p]) => m === request.method && p === pathname);
+      if (!isPublic) {
         const allowed = isAdminRequest ? await isAdminRequest(request) : true;
-        if (!allowed) return Response.json({ error: 'unauthorized' }, { status: 401 });
+        if (!allowed) {
+          if (loginPath && request.method === 'GET' && request.headers.get('accept')?.includes('text/html')) {
+            const target = new URL(loginPath, url.origin);
+            target.searchParams.set('next', url.pathname + url.search);
+            return new Response(null, { status: 303, headers: { Location: target.href, 'Cache-Control': 'private, no-store' } });
+          }
+          return Response.json({ error: 'unauthorized' }, { status: 401, headers: { 'Cache-Control': 'private, no-store' } });
+        }
+        // Cookie-authenticated admin mutations must originate from this host.
+        const origin = request.headers.get('origin');
+        if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && origin && origin !== url.origin) {
+          return Response.json({ error: 'forbidden origin' }, { status: 403 });
+        }
       }
       const { kernel } = await getKernel();
       const req = await toNodeRequest(request);
-      const res = new ResponseShim();
-      await kernel.handler(req, res);
-      return toWebResponse(res);
+      const res = new ResponseShim(() => req.emit('close'));
+      const abort = () => { req.emit('close'); res.end(); };
+      request.signal.addEventListener('abort', abort, { once: true });
+      detach = () => request.signal.removeEventListener('abort', abort);
+      res.once('finish', detach);
+      res.once('close', detach);
+      if (request.signal.aborted) abort();
+      else await kernel.handler(req, res);
+      // Static files use pipe(): the handler returns before all chunks arrive.
+      // SSE instead becomes ready as soon as its headers are written.
+      await res.ready;
+      const headers = new Headers();
+      for (const [key, value] of Object.entries(res.headers)) {
+        if (!HOP_HEADERS.has(key)) headers.set(key, String(value));
+      }
+      if (!isPublic) {
+        headers.set('Cache-Control', 'private, no-store');
+        headers.delete('access-control-allow-origin');
+      }
+      const body = [204, 205, 304].includes(res.status) || request.method === 'HEAD'
+        ? null : res.readable || (res.chunks.length ? Buffer.concat(res.chunks) : null);
+      return new Response(body, { status: res.status, headers });
     } catch (err) {
+      detach();
       console.error('[open-admin] next bridge error:', err);
-      return Response.json({ error: String((err && err.stack) || err) }, { status: 500 });
+      return Response.json({ error: err.status === 413 ? err.message : 'Unable to load the workspace. Please try again.' }, {
+        status: err.status === 413 ? 413 : 500, headers: { 'Cache-Control': 'private, no-store' },
+      });
     }
   }
   return { handler, GET: handler, POST: handler, PUT: handler, PATCH: handler, DELETE: handler, OPTIONS: handler };

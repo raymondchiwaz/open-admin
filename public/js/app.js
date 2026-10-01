@@ -32,7 +32,7 @@ for (const id of OA.data.clients || []) {
     }
   } catch (err) {
     console.error('[open-admin] client module failed:', id, err);
-    OA.toast(`⚠️ Plugin <b>${OA.esc(id)}</b> failed to load in the browser`, 'error');
+    OA.toast(`Plugin ${id} failed to load in the browser`, 'error');
   }
 }
 
@@ -41,23 +41,26 @@ for (const id of OA.data.clients || []) {
 const NAV_ICONS = { social: 'house', dashboard: 'layout-dashboard', users: 'users', tasks: 'square-check', notifications: 'bell', announcements: 'megaphone', notes: 'sticky-note', analytics: 'chart-no-axes-combined', 'activity-log': 'activity', 'system-info': 'activity', plugins: 'puzzle', settings: 'settings-2', onboarding: 'circle-help', polls: 'panels-top-left' };
 const NAV_TITLES = { social: 'Home feed', dashboard: 'Overview', users: 'People', plugins: 'Apps & integrations' };
 function navLink(item) {
-  return `<a class="oa-nav-item" data-path="${OA.esc(item.path)}" href="#/${OA.esc(item.path)}">${OA.icon(NAV_ICONS[item.path] || 'panels-top-left')}<span>${OA.esc(NAV_TITLES[item.path] || item.title)}</span>${item.path === 'social' ? '<span class="oa-nav-live"></span>' : ''}</a>`;
+  const icon = NAV_ICONS[item.path] ? OA.icon(NAV_ICONS[item.path]) : `<span class="oa-nav-emoji" aria-hidden="true">${OA.esc(item.icon || '•')}</span>`;
+  return `<a class="oa-nav-item" data-path="${OA.esc(item.path)}" href="#/${OA.esc(item.path)}">${icon}<span>${OA.esc(NAV_TITLES[item.path] || item.title)}</span>${item.path === 'social' ? '<span class="oa-nav-live"></span>' : ''}</a>`;
 }
 function renderSidebar() {
-  const primary = ['social', 'dashboard', 'tasks', 'users', 'notes', 'analytics'];
+  const primary = OA.data.workspace?.primaryPaths || ['social', 'dashboard', 'tasks', 'users', 'notes', 'analytics'];
   const utility = ['plugins', 'settings'];
   const extra = OA.data.nav.filter((n) => !primary.includes(n.path) && !utility.includes(n.path));
   const find = (paths) => paths.map((path) => OA.data.nav.find((n) => n.path === path)).filter(Boolean).map(navLink).join('');
+  const hasUtilities = utility.some(path => OA.data.nav.some(item => item.path === path));
+  const brand = OA.data.workspace?.brand || 'openadmin';
   document.getElementById('sidebar').innerHTML = `
-    <a href="#/${OA.esc(OA.data.home)}" class="oa-brand"><span class="oa-brand-logo">${OA.icon('panels-top-left',22)}</span><span class="oa-brand-text"><strong>openadmin<span class="oa-brand-period">.</span></strong><small>Everything, a little closer.</small></span></a>
+    <a href="#/${OA.esc(OA.data.home)}" class="oa-brand"><span class="oa-brand-logo">${OA.data.workspace?.logo ? `<img src="${OA.esc(OA.data.workspace.logo)}" width="30" height="30" alt="">` : OA.icon('panels-top-left',22)}</span><span class="oa-brand-text"><strong>${OA.esc(brand)}</strong><small>Admin workspace</small></span></a>
     <div class="oa-workspace-picker"><span class="oa-workspace-letter">${OA.esc((OA.siteName[0] || 'O').toUpperCase())}</span><span><b>${OA.esc(OA.siteName)}</b><small>Your workspace</small></span></div>
     <nav class="oa-nav" aria-label="Main navigation"><div class="oa-nav-label">Workspace</div>${find(primary)}
       ${extra.length ? `<details class="oa-more-nav" ${extra.some(n => n.path === currentPath()) ? 'open' : ''}><summary>${OA.icon('panels-top-left')}<span>More tools</span>${OA.icon('chevron-down',14)}</summary>${extra.map(navLink).join('')}</details>` : ''}
-      <div class="oa-nav-label oa-manage-label">Manage</div>${find(utility)}
+      ${hasUtilities ? `<div class="oa-nav-label oa-manage-label">Manage</div>${find(utility)}` : ''}
     </nav>
-    <div class="oa-sidebar-note">${OA.icon('plug',21)}<strong>Your workspace. Your rules.</strong><p>Connect your tools and make room for what matters.</p><a href="#/plugins">Explore integrations ${OA.icon('arrow-up-right',14)}</a></div>
+    ${OA.data.nav.some(n => n.path === 'plugins') ? `<div class="oa-sidebar-note">${OA.icon('plug',21)}<strong>Your workspace. Your rules.</strong><p>Connect your tools and make room for what matters.</p><a href="#/plugins">Explore integrations ${OA.icon('arrow-up-right',14)}</a></div>` : ''}
     <div class="oa-sidebar-foot"><div class="oa-profile">${OA.avatar(OA.me,34)}<span><b>${OA.esc(OA.me.name)}</b><small>Workspace admin</small></span><button class="oa-icon-btn" id="theme-btn" aria-label="Switch to ${OA.theme === 'dark' ? 'light' : 'dark'} theme">${OA.icon(OA.theme === 'dark' ? 'sun' : 'moon')}</button></div><span class="oa-open-source">Open source, always. <span>v${OA.esc(OA.version)}</span></span></div>`;
-  document.getElementById('theme-btn').addEventListener('click', () => { OA.toggleTheme(); renderSidebar(); markActive(); });
+  document.getElementById('theme-btn').addEventListener('click', () => { OA.toggleTheme(); renderSidebar(); markActive(); document.getElementById('theme-btn')?.focus(); });
 }
 function markActive() {
   document.querySelectorAll('.oa-nav-item').forEach((node) => {
@@ -70,17 +73,21 @@ function markActive() {
 /* ── Topbar ────────────────────────────────────────────────────────────── */
 
 function setNavOpen(open) {
+  const compact = OA.isCompact();
+  document.querySelector('.oa-main').inert = compact && open;
+  document.getElementById('sidebar').inert = compact && !open;
   document.body.classList.toggle('oa-nav-open', open);
   document.getElementById('menu-btn')?.setAttribute('aria-expanded', String(open));
   const scrim = document.getElementById('scrim');
   if (scrim) scrim.hidden = !open;
+  if (open && compact) document.querySelector('.oa-nav-item.active, .oa-nav-item')?.focus();
 }
 
 function renderTopbar(title) {
   const path = currentPath();
   document.getElementById('topbar').innerHTML = `
     <div class="oa-topbar-leading"><button class="oa-menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">${OA.icon('menu')}</button><span class="oa-breadcrumb">Workspace <span>/</span></span><h1 id="page-title">${OA.esc(NAV_TITLES[path] || title || 'Home')}</h1></div>
-    <div class="oa-topbar-actions"><span class="oa-connection" id="connection-status" role="status"></span><button class="oa-icon-btn" id="refresh-btn" aria-label="Refresh workspace">${OA.icon('refresh-cw',17)}</button></div>`;
+    <div class="oa-topbar-actions">${(OA.data.workspace?.links || []).map(link => `<a class="oa-btn secondary small oa-host-link" href="${OA.esc(link.href)}">${OA.esc(link.title)}</a>`).join('')}<span class="oa-connection" id="connection-status" role="status"></span><button class="oa-icon-btn" id="refresh-btn" aria-label="Refresh workspace">${OA.icon('refresh-cw',17)}</button></div>`;
   document.getElementById('refresh-btn').addEventListener('click', () => location.reload());
   document.getElementById('menu-btn').addEventListener('click', () => setNavOpen(!document.body.classList.contains('oa-nav-open')));
   updateConnection();
@@ -98,7 +105,11 @@ function currentPath() {
   return h || OA.data.home || 'dashboard';
 }
 
-function render() {
+let tableObserver;
+let renderVersion = 0;
+async function render() {
+  const version = ++renderVersion;
+  tableObserver?.disconnect();
   const path = currentPath();
   const nav = OA.data.nav.find((n) => n.path === path);
   const page = OA.pages.get(path);
@@ -106,6 +117,19 @@ function render() {
 
   if (OA._cleanup) { try { OA._cleanup(); } catch { /* noop */ } OA._cleanup = null; }
   content.innerHTML = '';
+  const pageRoot = document.createElement('div');
+  pageRoot.className = 'oa-page-body';
+  content.append(pageRoot);
+  const manage = OA.data.workspace?.managementLinks?.[path];
+  if (manage) {
+    const bar = document.createElement('div');
+    bar.className = 'oa-management-bar';
+    bar.innerHTML = `<span>Connected to ${OA.esc(OA.siteName)}</span><a class="oa-btn secondary small" href="${OA.esc(manage.href)}">${OA.esc(manage.title)} ${OA.icon('arrow-up-right',14)}</a>`;
+    pageRoot.before(bar);
+  }
+  pageRoot.innerHTML = '<div class="oa-loading" role="status">Loading workspace…</div>';
+  tableObserver = new MutationObserver(() => OA.enhanceTables(pageRoot));
+  tableObserver.observe(pageRoot, { childList: true, subtree: true });
 
   if (!page) {
     content.innerHTML = `
@@ -116,13 +140,17 @@ function render() {
       </div>`;
   } else {
     try {
-      OA._cleanup = page.mount(content, OA) || null;
+      const cleanup = await page.mount(pageRoot, OA);
+      if (version !== renderVersion) { if (typeof cleanup === 'function') cleanup(); return; }
+      OA._cleanup = typeof cleanup === 'function' ? cleanup : null;
     } catch (err) {
       console.error('[open-admin] page crashed:', path, err);
-      content.innerHTML = OA.crashCard(nav?.pluginId || path, err.message);
+      if (version !== renderVersion) return;
+      pageRoot.innerHTML = OA.crashCard(nav?.pluginId || path, err.message);
     }
   }
-  OA.fillSlots(content);
+  OA.fillSlots(pageRoot);
+  OA.enhanceTables(pageRoot);
 
   markActive();
   document.querySelector('.oa-nav-item.active')?.closest('details')?.setAttribute('open', '');
@@ -134,6 +162,16 @@ function render() {
 
 window.addEventListener('hashchange', render);
 document.getElementById('scrim')?.addEventListener('click', () => setNavOpen(false));
-window.addEventListener('keydown', (e) => { if (e.key === 'Escape') setNavOpen(false); });
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { setNavOpen(false); document.getElementById('menu-btn')?.focus(); }
+  if (e.key === 'Tab' && OA.isCompact() && document.body.classList.contains('oa-nav-open')) {
+    const nodes = [...document.getElementById('sidebar').querySelectorAll('a, button, summary, input')].filter(node => node.getClientRects().length);
+    const first = nodes[0], last = nodes[nodes.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+  }
+});
+window.matchMedia('(max-width: 900px)').addEventListener('change', () => setNavOpen(false));
 renderSidebar();
+setNavOpen(false);
 render();
