@@ -146,6 +146,18 @@ const OA = {
     return `<span class="oa-chip ${cls}">${esc(status.label)}</span>`;
   },
 
+  /* ── compact / mobile helpers for plugin authors ────────────────────── */
+
+  /** True when the admin is in its compact (drawer-nav) layout. */
+  isCompact() {
+    return window.matchMedia('(max-width: 900px)').matches;
+  },
+
+  /** Wrap a `<table class="oa-table">…` string so it scrolls horizontally on phones. */
+  tableWrap(tableHtml) {
+    return `<div class="oa-table-wrap">${tableHtml}</div>`;
+  },
+
   /* Local ("just me") reaction tracking so reactions toggle. */
   myReactions(postId) {
     try { return JSON.parse(localStorage.getItem('oa-react:' + postId) || '[]'); } catch { return []; }

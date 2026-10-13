@@ -75,15 +75,30 @@ function renderSidebar() {
 
 /* ── Topbar ────────────────────────────────────────────────────────────── */
 
+function setNavOpen(open) {
+  document.body.classList.toggle('oa-nav-open', open);
+  const scrim = document.getElementById('scrim');
+  if (scrim) scrim.hidden = !open;
+}
+
 function renderTopbar(title, subtitle) {
   document.getElementById('topbar').innerHTML = `
-    <div class="oa-topbar-title"><h1 id="page-title">${OA.esc(title || '')}</h1>
-      <span class="oa-topbar-sub">${OA.esc(subtitle || '')}</span></div>
+    <div style="display:flex;align-items:center;gap:10px;min-width:0">
+      <button class="oa-menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+      <div class="oa-topbar-title"><h1 id="page-title">${OA.esc(title || '')}</h1>
+        <span class="oa-topbar-sub">${OA.esc(subtitle || '')}</span></div>
+    </div>
     <div class="oa-topbar-actions">
       <button class="oa-icon-btn" id="refresh-btn" title="Reload admin">⟳</button>
       <div class="oa-me" title="Signed in as ${OA.esc(OA.me.name)}">${OA.avatar(OA.me, 34)}</div>
     </div>`;
   document.getElementById('refresh-btn').addEventListener('click', () => location.reload());
+  const menuBtn = document.getElementById('menu-btn');
+  menuBtn.addEventListener('click', () => {
+    const open = !document.body.classList.contains('oa-nav-open');
+    setNavOpen(open);
+    menuBtn.setAttribute('aria-expanded', String(open));
+  });
 }
 
 /* ── Router ────────────────────────────────────────────────────────────── */
@@ -123,8 +138,12 @@ function render() {
     el.classList.toggle('active', el.dataset.path === path));
   document.title = `${nav ? nav.title : 'Not found'} · ${OA.siteName}`;
   renderTopbar(nav?.title, nav ? 'by plugin ' + nav.pluginId : '');
+  // Compact mode: navigating picks a page and closes the drawer.
+  if (window.matchMedia('(max-width: 900px)').matches) setNavOpen(false);
 }
 
 window.addEventListener('hashchange', render);
+document.getElementById('scrim')?.addEventListener('click', () => setNavOpen(false));
+window.addEventListener('keydown', (e) => { if (e.key === 'Escape') setNavOpen(false); });
 renderSidebar();
 render();
